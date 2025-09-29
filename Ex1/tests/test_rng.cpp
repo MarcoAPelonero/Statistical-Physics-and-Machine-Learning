@@ -83,19 +83,17 @@ static uint64_t parse_seed(int argc, char** argv, bool& has_seed) {
 }
 
 int main(int argc, char** argv) {
-    constexpr std::size_t N = 20000;  // samples per experiment
+    constexpr std::size_t N = 20000;  
 
     bool has_seed = false;
     uint64_t seed = parse_seed(argc, argv, has_seed);
 
-    // --- Uniform tests ---
     rng::UniformRandom ugen;
-    rng::GaussianRandom ggen; // we'll use this later too
+    rng::GaussianRandom ggen; 
     if (has_seed) { ugen.seed(seed); ggen.seed(seed + 1); }
 
-    std::vector<double> u01 = ugen.next(N); // default [0,1)
+    std::vector<double> u01 = ugen.next(N); 
 
-    // Map to another range [-2, 3): x = a + (b-a) * u
     const double a = -2.0, b = 3.0;
     std::vector<double> u_a_b;
     u_a_b.reserve(N);
@@ -115,5 +113,13 @@ int main(int argc, char** argv) {
     print_histogram("Gaussian N(0, 2.0^2)", g_s20, mean - 4.0 * 2.0, mean + 4.0 * 2.0, 40, 60);
 
     cout << "\nDone.\n";
+
+    // Define 2 new generators with random seeds
+    rng::UniformRandom ugen2;
+    rng::GaussianRandom ggen2;
+    // Generate single values and print them 
+    cout << "\nSingle samples from new generators with random seeds:\n";
+    cout << "Uniform: " << ugen2() << "\n";
+    cout << "Gaussian: " << ggen2(mean, 1000.0) << "\n";
     return 0;
 }
