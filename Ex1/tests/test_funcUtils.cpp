@@ -6,10 +6,24 @@
 #include <algorithm>
 #include <numeric>
 #include <string>
+#ifdef _WIN32
+#include <direct.h>
+#endif
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "funcUtils.hpp"
 
 using std::cout;
 using std::endl;
+
+// Function to create directory if it doesn't exist
+void create_directory(const std::string& path) {
+#ifdef _WIN32
+    _mkdir(path.c_str());
+#else
+    mkdir(path.c_str(), 0755);
+#endif
+}
 
 struct Stats {
     double mean;
@@ -186,8 +200,12 @@ void test_polynomial_functions() {
 void generate_function_data_files() {
     cout << "\n=== Generating Data Files for Plotting ===\n";
     
+    // Create output directory
+    const std::string data_dir = "testFuncUtilsData";
+    create_directory(data_dir);
+    
     // Generate data for hidden functions
-    std::ofstream func_file("hidden_functions.dat");
+    std::ofstream func_file(data_dir + "/hidden_functions.dat");
     func_file << "# x hiddenA hiddenB\n";
     
     const double x_min = -2.0, x_max = 2.0;
@@ -201,10 +219,10 @@ void generate_function_data_files() {
         func_file << x << " " << ya << " " << yb << "\n";
     }
     func_file.close();
-    cout << "✓ Generated hidden_functions.dat\n";
+    cout << "✓ Generated " << data_dir << "/hidden_functions.dat\n";
     
     // Generate noisy data
-    std::ofstream noisy_file("noisy_data.dat");
+    std::ofstream noisy_file(data_dir + "/noisy_data.dat");
     noisy_file << "# x noisyA_01 noisyA_05 noisyB_01 noisyB_05\n";
     
     const int n_noisy = 50;
@@ -221,10 +239,10 @@ void generate_function_data_files() {
                    << noisy_b_01 << " " << noisy_b_05 << "\n";
     }
     noisy_file.close();
-    cout << "✓ Generated noisy_data.dat\n";
+    cout << "✓ Generated " << data_dir << "/noisy_data.dat\n";
     
     // Generate polynomial data
-    std::ofstream poly_file("polynomial_data.dat");
+    std::ofstream poly_file(data_dir + "/polynomial_data.dat");
     poly_file << "# x linear quadratic cubic quintic\n";
     
     auto linear = make_polynomial(1);
@@ -248,10 +266,10 @@ void generate_function_data_files() {
                   << y_cubic << " " << y_quin << "\n";
     }
     poly_file.close();
-    cout << "✓ Generated polynomial_data.dat\n";
+    cout << "✓ Generated " << data_dir << "/polynomial_data.dat\n";
     
     // Generate noise statistics
-    std::ofstream noise_file("noise_stats.dat");
+    std::ofstream noise_file(data_dir + "/noise_stats.dat");
     noise_file << "# stddev mean measured_stddev\n";
     
     std::vector<double> stddevs = {0.1, 0.5, 1.0, 2.0, 5.0};
@@ -263,7 +281,7 @@ void generate_function_data_files() {
         noise_file << stddev << " " << stats.mean << " " << stats.stddev << "\n";
     }
     noise_file.close();
-    cout << "✓ Generated noise_stats.dat\n";
+    cout << "✓ Generated " << data_dir << "/noise_stats.dat\n";
 }
 
 int main() {
@@ -276,7 +294,7 @@ int main() {
     generate_function_data_files();
     
     cout << "\n=== All Tests Completed ===\n";
-    cout << "Data files generated for plotting. Run testFuncPlotter.py to visualize results.\n";
+    cout << "Data files generated in testFuncUtilsData/ folder. Run funcUtilsPlotter.py to visualize results.\n";
     
     return 0;
 }
