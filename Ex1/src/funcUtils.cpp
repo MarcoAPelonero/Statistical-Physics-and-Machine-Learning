@@ -73,8 +73,7 @@ double generateDataPointsB(double x, double noise_stddev) {
     return hiddenFunctionB(x) + noise;
 }
 
-std::vector<double> generateDataPointsA(const std::vector<double>& xs, std::size_t n, double noise_stddev) {
-    rng::GaussianRandom ggen;
+std::vector<double> generateDataPointsA(const std::vector<double>& xs, rng::GaussianRandom& ggen, std::size_t n, double noise_stddev) {
     std::vector<double> ys = hiddenFunctionA(xs);
     std::vector<double> noises = generateNoise(ggen, n, noise_stddev);
     for (std::size_t i = 0; i < ys.size() && i < noises.size(); ++i) {
@@ -83,8 +82,7 @@ std::vector<double> generateDataPointsA(const std::vector<double>& xs, std::size
     return ys;
 }
 
-std::vector<double> generateDataPointsB(const std::vector<double>& xs, std::size_t n, double noise_stddev) {
-    rng::GaussianRandom ggen;
+std::vector<double> generateDataPointsB(const std::vector<double>& xs, rng::GaussianRandom& ggen, std::size_t n, double noise_stddev) {
     std::vector<double> ys = hiddenFunctionB(xs);
     std::vector<double> noises = generateNoise(ggen, n, noise_stddev);
     for (std::size_t i = 0; i < ys.size() && i < noises.size(); ++i) {

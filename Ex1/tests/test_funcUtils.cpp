@@ -128,7 +128,9 @@ void test_data_generation() {
     
     cout << "Single data point generation at x=" << x_test << " with noise_stddev=" << noise_std << ":\n";
     cout << "Pure functions: A=" << hiddenFunctionA(x_test) << ", B=" << hiddenFunctionB(x_test) << "\n";
-    
+
+    rng::GaussianRandom ggen;
+
     cout << "With noise (5 samples each):\n";
     for (int i = 0; i < 5; ++i) {
         double noisy_a = generateDataPointsA(x_test, noise_std);
@@ -137,9 +139,9 @@ void test_data_generation() {
     }
     
     std::vector<double> x_vec = {-1.0, 0.0, 1.0, 2.0};
-    std::vector<double> noisy_a_vec = generateDataPointsA(x_vec, x_vec.size(), noise_std);
-    std::vector<double> noisy_b_vec = generateDataPointsB(x_vec, x_vec.size(), noise_std);
-    
+    std::vector<double> noisy_a_vec = generateDataPointsA(x_vec, ggen, x_vec.size(), noise_std);
+    std::vector<double> noisy_b_vec = generateDataPointsB(x_vec, ggen, x_vec.size(), noise_std);
+
     cout << "\nVector data generation:\n";
     cout << "x\t\tNoisy A\t\tNoisy B\n";
     for (std::size_t i = 0; i < x_vec.size(); ++i) {

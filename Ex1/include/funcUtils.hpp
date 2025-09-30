@@ -21,8 +21,8 @@ std::vector<double> generateNoise(rng::GaussianRandom& ggen, std::size_t n, doub
 double generateDataPointsA(double x, double noise_stddev);
 double generateDataPointsB(double x, double noise_stddev);
 
-std::vector<double> generateDataPointsA(const std::vector<double>& xs, std::size_t n, double noise_stddev);
-std::vector<double> generateDataPointsB(const std::vector<double>& xs, std::size_t n, double noise_stddev);
+std::vector<double> generateDataPointsA(const std::vector<double>& xs, rng::GaussianRandom& ggen, std::size_t n, double noise_stddev);
+std::vector<double> generateDataPointsB(const std::vector<double>& xs, rng::GaussianRandom& ggen, std::size_t n, double noise_stddev);
 
 std::function<double(double, const std::vector<double>&)>
 make_polynomial(std::size_t order);
