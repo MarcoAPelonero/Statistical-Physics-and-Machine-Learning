@@ -82,6 +82,58 @@ void epoch(
     }
 }
 
+void stochastic_epoch(
+    const std::function<double(double, const std::vector<double>&)>& f,
+    const std::vector<double>& x,
+    const std::vector<double>& y,
+    std::vector<double>& params,
+    double lr,
+    double l2,
+    rng::UniformIntRandom& rng,
+    std::size_t batch_size,
+    double lr_decay,
+    std::size_t decay_every,
+    bool drop_last,
+    double fd_eps) {
+    const std::size_t n = x.size();
+    const std::size_t p = params.size();
+    
+    std::vector<int> indices(n);
+    for (std::size_t i = 0; i < n; ++i) indices[i] = static_cast<int>(i);
+
+    // Shuffle using Fisher Yates
+    for (std::size_t i = n - 1; i > 0; --i) {
+        std::size_t j = static_cast<std::size_t>(rng(0, static_cast<int>(i + 1)));
+        std::swap(indices[i], indices[j]);
+    }
+    
+    std::size_t num_batches = drop_last ? n / batch_size : (n + batch_size - 1) / batch_size;
+    for (std::size_t batch_idx = 0; batch_idx < num_batches; ++batch_idx) {
+        std::size_t start_idx = batch_idx * batch_size;
+        std::size_t end_idx = std::min(start_idx + batch_size, n);
+        if (drop_last && (end_idx - start_idx) < batch_size) {
+            break;
+        }
+        std::vector<double> x_batch, y_batch;
+        x_batch.reserve(end_idx - start_idx);
+        y_batch.reserve(end_idx - start_idx);
+        for (std::size_t i = start_idx; i < end_idx; ++i) {
+            x_batch.push_back(x[indices[i]]);
+            y_batch.push_back(y[indices[i]]);
+        }
+        
+        std::vector<double> gradient(p, 0.0);
+        compute_gradient(f, x_batch, y_batch, params, gradient, fd_eps);
+        for (std::size_t j = 0; j < p; ++j) {
+            params[j] -= lr * (gradient[j] + l2 * params[j]);
+        }
+        
+        if (decay_every > 0 && (batch_idx + 1) % decay_every == 0) {
+            lr *= lr_decay;
+        }
+    }
+}
+
 std::vector<double> fit_gd(
     const std::function<double(double, const std::vector<double>&)>& f,
     const std::vector<double>& x,
@@ -111,6 +163,47 @@ std::vector<double> fit_gd(
     }
     return params;
 
+}
+
+std::vector<double> fit_sgd(
+    const std::function<double(double, const std::vector<double>&)>& f,
+    const std::vector<double>& x,
+    const std::vector<double>& y,
+    std::vector<double> params0,
+    const SGDOptions& options,
+    double fd_eps) {
+    if (x.size() != y.size()) {
+        throw std::invalid_argument("x and y must have the same size");
+    }
+    const std::size_t n = x.size();
+    const std::size_t p = params0.size();
+    if (n == 0 || p == 0) {
+        throw std::invalid_argument("x, y, and params0 must be non-empty");
+    }
+    if (options.batch_size == 0) {
+        throw std::invalid_argument("batch_size must be > 0");
+    }
+    if (options.batch_size > n) {
+        throw std::invalid_argument("batch_size must be <= number of data points");
+    }
+
+    rng::UniformIntRandom rng;
+
+    std::vector<double> params = params0;
+    double current_lr = options.lr;
+    for (std::size_t epoch_idx = 0; epoch_idx < options.max_epochs; ++epoch_idx) {
+        stochastic_epoch(f, x, y, params, current_lr, options.l2, rng,
+                         options.batch_size, options.lr_decay, options.decay_every,
+                         options.drop_last, fd_eps);
+        if (options.verbose && (epoch_idx % options.print_every == 0 || epoch_idx == options.max_epochs - 1)) {
+            std::vector<double> y_pred(n);
+            predict(f, x, params, y_pred);
+            double mse = compute_mse(y, y_pred);
+            std::cout << "Epoch " << epoch_idx << "/" << options.max_epochs
+                      << ", MSE: " << mse << std::endl;
+        }
+    }
+    return params;
 }
 
 }

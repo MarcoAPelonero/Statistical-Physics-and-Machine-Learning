@@ -13,6 +13,8 @@ int main(int argc, char** argv) {
             exPointOne();
             exPointTwo();
             exPointThree();
+            exPointFour();
+            exPointFive();
             break;
         case 3:
             if (std::string(argv[1]) == "single") {
@@ -27,8 +29,14 @@ int main(int argc, char** argv) {
                     case 3:
                         exPointThree();
                         break;
+                    case 4:
+                        exPointFour();
+                        break;  
+                    case 5:
+                        exPointFive();
+                        break;  
                     default:
-                        std::cerr << "Invalid exercise number. Please choose between 1 and 4.\n";
+                        std::cerr << "Invalid exercise number. Please choose between 1 and 5.\n";
                         return 1;
                 }
             } else {

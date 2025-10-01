@@ -36,6 +36,16 @@ private:
     std::uniform_real_distribution<double> dist_{0.0, 1.0};
 };
 
+class UniformIntRandom : public RandomGenerator {
+public:
+    using RandomGenerator::RandomGenerator;
+
+    int next(int min_inclusive, int max_exclusive);
+    std::vector<int> next(std::size_t n, int min_inclusive, int max_exclusive);
+
+    int operator()(int min_inclusive, int max_exclusive) { return next(min_inclusive, max_exclusive); }
+};
+
 class GaussianRandom : public RandomGenerator {
 public:
     using RandomGenerator::RandomGenerator;
@@ -49,6 +59,6 @@ private:
     std::normal_distribution<double> dist_{0.0, 1.0};
 };
 
-} 
+}
 
 #endif // RNG_HPP

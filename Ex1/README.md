@@ -20,3 +20,30 @@ $$
 $$
 
 Now we can specify that usually $\eta$ is the **learning rate**.
+
+## Comparing GD and SGD (Exercise 5)
+
+`exPointFive` generates a fresh dataset, fits the three reference polynomials (orders 1, 3, and 10) using both full-batch Gradient Descent and Stochastic Gradient Descent, and exports the results for visualization.
+
+### Generate comparison data
+
+```powershell
+mingw32-make compile
+.in\main.exe single 5
+```
+
+This creates:
+
+- `gd_vs_sgd_fullbatch.txt` / `gd_vs_sgd_fullbatch.png` – GD vs SGD with batch size `N`
+- `gd_vs_sgd_minibatch2.txt` / `gd_vs_sgd_minibatch2.png` – GD vs SGD with mini-batch size `2`
+
+### Plotting
+
+To build the two 8×2 comparison figures (polynomial fits and parameter bars for datasets A and B):
+
+```powershell
+set MPLBACKEND=Agg
+python -c "import excercisePlotter as p; p.exFivePlotter()"
+```
+
+The plotting helper reads the generated text files and saves the corresponding figures alongside them.
