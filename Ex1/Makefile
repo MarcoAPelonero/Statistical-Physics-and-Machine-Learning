@@ -57,6 +57,7 @@ run: $(MAIN_EXE)
 
 clean:
 	@rm -rf $(BUILD_DIR) $(BIN_DIR)
+	@rm -f *.txt $(BUILD_DIR)/*.txt $(BIN_DIR)/*.txt
 
 -include $(OBJECTS:.o=.d)
 -include $(BUILD_DIR)/test_*.d
