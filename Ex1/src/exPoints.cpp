@@ -375,10 +375,10 @@ void exPointFour() {
 void exPointFive() {
     std::cout << "\n=== Exercise point n5 ===\n";
 
-    const std::size_t N_samples = 64;
+    const std::size_t N_samples = 20;
     const double min_v = 0.0;
     const double max_v = 1.0;
-    const double noise_stddev = 0.05;
+    const double noise_stddev = 0.00;
     const std::size_t N_plot = 1000;
     const double plot_max = 1.25;
 

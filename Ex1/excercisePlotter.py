@@ -585,4 +585,8 @@ if __name__ == "__main__":
 
     # Run exercise 4 plotter (data with test points and polynomial fits)
     print("Plotting data with test points and polynomial fits...")
-    exFourPlotter()
+    # exFourPlotter()
+
+    # Run exercise 5 plotter (comparison of GD vs SGD)
+    print("Plotting comparison of GD vs SGD...")
+    exFivePlotter()
