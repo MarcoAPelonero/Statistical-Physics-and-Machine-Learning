@@ -184,8 +184,186 @@ void exPointFive() {
     std::cout << "\n=== Exercise point n5 ===\n";
 }
 
+void exPointSix() {
+    std::cout << "\n=== Exercise point n6 ===\n";
+}
+
+void exPointSeven() {
+    std::cout << "\n=== Exercise point n7 ===\n";
+    
+
+    const std::size_t N_samples = 100;
+    const double min_v = 0.0;
+    const double max_v = 1.0;
+    const double noise_stddev = 1.00;
+    const std::size_t N_plot = 1000;
+    const std::size_t N_test = 20;
+    const double plot_max = 1.25;
+
+    rng::UniformRandom ugen;
+    rng::GaussianRandom ggen;
+
+    std::vector<double> uniform_numbers = ugen.next(N_samples);
+    std::vector<double> x;
+    x.reserve(N_samples);
+    for (double u : uniform_numbers) {
+        x.push_back(min_v + (max_v - min_v) * u);
+    }
+
+    std::vector<double> dataPointsA = generateDataPointsA(x, ggen, N_samples, noise_stddev);
+    std::vector<double> dataPointsB = generateDataPointsB(x, ggen, N_samples, noise_stddev);
+
+    DataSet dataset;
+    dataset.x = x;
+    dataset.dataPointsA = dataPointsA;
+    dataset.dataPointsB = dataPointsB;
+
+    std::vector<std::size_t> orders = {1, 3, 10};
+    PolynomialSet poly_set = initializePoly(orders, 0.0, 0.2);
+
+    fit::GDOptions gd_options;
+    gd_options.lr = 0.2;
+    gd_options.max_epochs = 10000;
+    gd_options.l2 = 0.00;
+    gd_options.verbose = true;
+    gd_options.print_every = 2000;
+
+    FitResults gd_results = fitData(dataset, poly_set, gd_options);
+
+    fit::SGDOptions sgd_full_options;
+    sgd_full_options.lr = gd_options.lr;
+    sgd_full_options.max_epochs = gd_options.max_epochs;
+    sgd_full_options.l2 = gd_options.l2;
+    sgd_full_options.verbose = gd_options.verbose;
+    sgd_full_options.print_every = gd_options.print_every;
+    sgd_full_options.batch_size = 10;
+    sgd_full_options.drop_last = false;
+    sgd_full_options.lr_decay = 0.5;
+    sgd_full_options.decay_every = 2000;
+
+    FitResults sgd_full_results = fitDataSGD(dataset, poly_set, sgd_full_options);
+
+    std::vector<double> x_plot(N_plot);
+    for (std::size_t i = 0; i < N_plot; ++i) {
+        x_plot[i] = min_v + (plot_max - min_v) * static_cast<double>(i) / static_cast<double>(N_plot - 1);
+    }
+
+    std::vector<double> uniform_test = ugen.next(N_test);
+    std::vector<double> x_test;
+    x_test.reserve(N_test);
+    for (double u : uniform_test) {
+        x_test.push_back(min_v + (plot_max - min_v) * u);
+    }
+
+    TestSet test_set;
+    test_set.x = x_test;
+    test_set.targetA = hiddenFunctionA(x_test);
+    test_set.targetB = hiddenFunctionB(x_test);
+
+    CurveSet curve_set;
+    curve_set.x = x_plot;
+    curve_set.targetA = hiddenFunctionA(x_plot);
+    curve_set.targetB = hiddenFunctionB(x_plot);
+
+    std::vector<std::pair<std::string, const FitResults*>> full_batch_methods;
+    full_batch_methods.emplace_back("GD", &gd_results);
+    full_batch_methods.emplace_back("SGD batch=" + std::to_string(sgd_full_options.batch_size), &sgd_full_results);
+    const std::string comparison_filename = "exercise7_comparison.txt";
+    writeComparisonFile(comparison_filename, dataset, poly_set, x_plot, full_batch_methods, noise_stddev, &test_set, &curve_set);
+
+    std::cout << "Exercise 7 comparison data written to " << comparison_filename << std::endl;
+}
+
+void exPointEight() {
+    std::cout << "\n=== Exercise point n8 ===\n";
+}
+
+void exPointNine() {
+    std::cout << "\n=== Exercise point n9 ===\n";
+    const std::size_t N_samples = 10000;
+    const double min_v = 0.0;
+    const double max_v = 1.0;
+    const double noise_stddev = 1.00;
+    const std::size_t N_plot = 1000;
+    const std::size_t N_test = 20;
+    const double plot_max = 1.25;
+
+    rng::UniformRandom ugen;
+    rng::GaussianRandom ggen;
+
+    std::vector<double> uniform_numbers = ugen.next(N_samples);
+    std::vector<double> x;
+    x.reserve(N_samples);
+    for (double u : uniform_numbers) {
+        x.push_back(min_v + (max_v - min_v) * u);
+    }
+
+    std::vector<double> dataPointsA = generateDataPointsA(x, ggen, N_samples, noise_stddev);
+    std::vector<double> dataPointsB = generateDataPointsB(x, ggen, N_samples, noise_stddev);
+
+    DataSet dataset;
+    dataset.x = x;
+    dataset.dataPointsA = dataPointsA;
+    dataset.dataPointsB = dataPointsB;
+
+    std::vector<std::size_t> orders = {1, 3, 10};
+    PolynomialSet poly_set = initializePoly(orders, 0.0, 0.2);
+
+    fit::GDOptions gd_options;
+    gd_options.lr = 0.2;
+    gd_options.max_epochs = 10000;
+    gd_options.l2 = 0.00;
+    gd_options.verbose = true;
+    gd_options.print_every = 2000;
+
+    FitResults gd_results = fitData(dataset, poly_set, gd_options);
+
+    fit::SGDOptions sgd_full_options;
+    sgd_full_options.lr = gd_options.lr;
+    sgd_full_options.max_epochs = gd_options.max_epochs;
+    sgd_full_options.l2 = gd_options.l2;
+    sgd_full_options.verbose = gd_options.verbose;
+    sgd_full_options.print_every = gd_options.print_every;
+    sgd_full_options.batch_size = 10;
+    sgd_full_options.drop_last = false;
+    sgd_full_options.lr_decay = 1.0;
+    sgd_full_options.decay_every = 0;
+
+    FitResults sgd_full_results = fitDataSGD(dataset, poly_set, sgd_full_options);
+
+    std::vector<double> x_plot(N_plot);
+    for (std::size_t i = 0; i < N_plot; ++i) {
+        x_plot[i] = min_v + (plot_max - min_v) * static_cast<double>(i) / static_cast<double>(N_plot - 1);
+    }
+
+    std::vector<double> uniform_test = ugen.next(N_test);
+    std::vector<double> x_test;
+    x_test.reserve(N_test);
+    for (double u : uniform_test) {
+        x_test.push_back(min_v + (plot_max - min_v) * u);
+    }
+
+    TestSet test_set;
+    test_set.x = x_test;
+    test_set.targetA = hiddenFunctionA(x_test);
+    test_set.targetB = hiddenFunctionB(x_test);
+
+    CurveSet curve_set;
+    curve_set.x = x_plot;
+    curve_set.targetA = hiddenFunctionA(x_plot);
+    curve_set.targetB = hiddenFunctionB(x_plot);
+
+    std::vector<std::pair<std::string, const FitResults*>> full_batch_methods;
+    full_batch_methods.emplace_back("GD", &gd_results);
+    full_batch_methods.emplace_back("SGD batch=" + std::to_string(sgd_full_options.batch_size), &sgd_full_results);
+    const std::string comparison_filename = "exercise9_comparison.txt";
+    writeComparisonFile(comparison_filename, dataset, poly_set, x_plot, full_batch_methods, noise_stddev, &test_set, &curve_set);
+
+    std::cout << "Exercise 9 comparison data written to " << comparison_filename << std::endl;
+}
+
 void comparison() {
-    std::cout << "\n=== Exercise point n5 ===\n";
+    std::cout << "\n=== Comparison ===\n";
 
     const std::size_t N_samples = 20;
     const double min_v = 0.0;

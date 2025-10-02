@@ -27,12 +27,31 @@ struct FitResults {
     std::vector<std::size_t> orders;
 };
 
+struct TestSet {
+    std::vector<double> x;
+    std::vector<double> targetA;
+    std::vector<double> targetB;
+};
+
+struct CurveSet {
+    std::vector<double> x;
+    std::vector<double> targetA;
+    std::vector<double> targetB;
+};
+
 DataSet readOutputFile(const std::string& filepath);
 PolynomialSet initializePoly(const std::vector<std::size_t>& orders, double param_mean = 0.0, double param_stddev = 0.1);
 FitResults fitData(const DataSet& dataset, const PolynomialSet& poly_set, const fit::GDOptions& options);
 FitResults fitDataSGD(const DataSet& dataset, const PolynomialSet& poly_set, const fit::SGDOptions& options);
 
 void writeComparisonFile(
-    const std::string& filename, const DataSet& dataset, const PolynomialSet& poly_set, const std::vector<double>& x_pred, const std::vector<std::pair<std::string, const FitResults*>>& methods, double noise_stddev);
+    const std::string& filename,
+    const DataSet& dataset,
+    const PolynomialSet& poly_set,
+    const std::vector<double>& x_pred,
+    const std::vector<std::pair<std::string, const FitResults*>>& methods,
+    double noise_stddev,
+    const TestSet* test_set = nullptr,
+    const CurveSet* test_curve = nullptr);
 
 #endif // GENERAL_UTILS_HPP

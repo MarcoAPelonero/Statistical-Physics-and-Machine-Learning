@@ -21,19 +21,24 @@ int main(int argc, char** argv) {
             exPointThree();
             exPointFour();
             exPointFive();
+            exPointSix();
+            exPointSeven();
+            exPointEight();
+            exPointNine();
             comparison();
             break;
         case 2:
             if (std::string(argv[1]) == "default") {
-                // Run all exercises (same as case 1)
                 exPointOne();
                 exPointTwo();
                 exPointThree();
                 exPointFour();
                 exPointFive();
-                comparison();
+                exPointSix();
+                exPointSeven();
+                exPointEight();
+                exPointNine();
             } else if (std::string(argv[1]) == "comparison") {
-                // Run only comparison
                 comparison();
             } else {
                 std::cerr << "Invalid argument. Use 'default', 'comparison', or 'single <number>'.\n";
@@ -59,8 +64,20 @@ int main(int argc, char** argv) {
                     case 5:
                         exPointFive();
                         break;  
+                    case 6:
+                        exPointSix();
+                        break;
+                    case 7:
+                        exPointSeven();
+                        break;
+                    case 8:
+                        exPointEight();
+                        break;
+                    case 9:
+                        exPointNine();
+                        break;
                     default:
-                        std::cerr << "Invalid exercise number. Please choose between 1 and 5.\n";
+                        std::cerr << "Invalid exercise number. Please choose between 1 and 9.\n";
                         return 1;
                 }
             } else {

@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 from utils.excerciseUtils import ORDER_COLORS, DATASET_SCATTER_COLORS
 from utils.excerciseUtils import fileReader, dataPlotter, plotWithFits, fittedDataReader
+from utils.comparisonUtils import plotComparisonFigure
 
 def exOnePlotter():
     return
@@ -25,9 +26,6 @@ def exFourPlotter(save_plot=False):
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
     
-    # On the 2 axis of the figure plot data point from A and the fitted curves for A, and on the second for B
-    
-    # Plot A: Test data points and fitted curves for dataset A
     ax1.scatter(testDataPoints['uniform_data'], testDataPoints['datapointsA'], 
                 color='orange', alpha=0.8, s=50, label='Test Data A')
     ax1.plot(fittedData['x_pred'], fittedData['fit1_A'], '-', 
@@ -43,7 +41,6 @@ def exFourPlotter(save_plot=False):
     ax1.legend()
     ax1.grid(True, alpha=0.3)
     
-    # Plot B: Test data points and fitted curves for dataset B
     ax2.scatter(testDataPoints['uniform_data'], testDataPoints['datapointsB'], 
                 color='green', alpha=0.8, s=50, label='Test Data B')
     ax2.plot(fittedData['x_pred'], fittedData['fit1_B'], '-', 
@@ -71,10 +68,34 @@ def exFourPlotter(save_plot=False):
     print(f"- {len(testDataPoints['uniform_data'])} test data points")
     print(f"- {len(fittedData['x_pred'])} fitted data points")
 
+def exSevenPlotter(save_plot=False):
+    filepath = 'exercise7_comparison.txt'
+    if not os.path.exists(filepath):
+        print(f"Warning: {filepath} not found. Run exPointSeven() to generate it.")
+        return
+
+    output_path = 'exercise7_plot.png' if save_plot else None
+    title = 'Exercise 7: GD vs SGD (100 samples)'
+    plotComparisonFigure(filepath, title, output_path=output_path)
+    if save_plot and output_path:
+        print(f"Plot saved as {output_path}")
+
+def exNinePlotter(save_plot=False):
+    filepath = 'exercise9_comparison.txt'
+    if not os.path.exists(filepath):
+        print(f"Warning: {filepath} not found. Run exPointNine() to generate it.")
+        return
+
+    output_path = 'exercise9_plot.png' if save_plot else None
+    title = 'Exercise 9: GD vs SGD (10k samples)'
+    plotComparisonFigure(filepath, title, output_path=output_path)
+    if save_plot and output_path:
+        print(f"Plot saved as {output_path}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Exercise plotter with configurable options')
-    parser.add_argument('-e', '--exercise', type=int, choices=[2, 3, 4], 
-                        help='Which exercise to run (2, 3, or 4). Default: run all')
+    parser.add_argument('-e', '--exercise', type=int, choices=[2, 3, 4, 7, 9], 
+                        help='Which exercise to run (2, 3, 4, 7, or 9). Default: run all')
     parser.add_argument('-s', '--save', action='store_true', 
                         help='Save plots as PNG files instead of displaying them')
     
@@ -83,7 +104,7 @@ if __name__ == "__main__":
     if args.exercise:
         exercises_to_run = [args.exercise]
     else:
-        exercises_to_run = [2, 3, 4]  
+        exercises_to_run = [2, 3, 4, 7, 9]  
     for exercise in exercises_to_run:
         if exercise == 2:
             print("Running Exercise 2: Plotting original data...")
@@ -94,6 +115,12 @@ if __name__ == "__main__":
         elif exercise == 4:
             print("Running Exercise 4: Plotting data with test points and polynomial fits...")
             exFourPlotter(save_plot=args.save)
+        elif exercise == 7:
+            print("Running Exercise 7: Comparison with test data and true curve...")
+            exSevenPlotter(save_plot=args.save)
+        elif exercise == 9:
+            print("Running Exercise 9: Comparison with test data and true curve...")
+            exNinePlotter(save_plot=args.save)
     
     if args.save:
         print(f"\nAll plots saved successfully!")

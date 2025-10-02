@@ -1,4 +1,5 @@
 #include "generalUtils.hpp"
+#include <algorithm>
 
 DataSet readOutputFile(const std::string& filepath) {
     DataSet dataset;
@@ -108,11 +109,59 @@ void writeComparisonFile(
     const PolynomialSet& poly_set,
     const std::vector<double>& x_pred,
     const std::vector<std::pair<std::string, const FitResults*>>& methods,
-    double noise_stddev) {
+    double noise_stddev,
+    const TestSet* test_set,
+    const CurveSet* test_curve) {
     std::ofstream outfile(filename);
     if (!outfile.is_open()) {
         std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
         return;
+    }
+
+    bool has_test_set = false;
+    std::size_t test_size = 0;
+    std::vector<double> x_test;
+    std::vector<double> target_test_A;
+    std::vector<double> target_test_B;
+    if (test_set && !test_set->x.empty()) {
+        test_size = test_set->x.size();
+        test_size = std::min(test_size, test_set->targetA.size());
+        test_size = std::min(test_size, test_set->targetB.size());
+        if (test_size > 0) {
+            has_test_set = true;
+            x_test.assign(test_set->x.begin(), test_set->x.begin() + test_size);
+            target_test_A.assign(test_set->targetA.begin(), test_set->targetA.begin() + test_size);
+            target_test_B.assign(test_set->targetB.begin(), test_set->targetB.begin() + test_size);
+            if (test_set->x.size() != test_size ||
+                test_set->targetA.size() != test_size ||
+                test_set->targetB.size() != test_size) {
+                std::cerr << "Warning: Test set vectors have mismatched sizes. Truncating to "
+                          << test_size << " entries." << std::endl;
+            }
+        }
+    }
+
+    bool has_test_curve = false;
+    std::size_t curve_size = 0;
+    std::vector<double> x_curve;
+    std::vector<double> curve_A;
+    std::vector<double> curve_B;
+    if (test_curve && !test_curve->x.empty()) {
+        curve_size = test_curve->x.size();
+        curve_size = std::min(curve_size, test_curve->targetA.size());
+        curve_size = std::min(curve_size, test_curve->targetB.size());
+        if (curve_size > 0) {
+            has_test_curve = true;
+            x_curve.assign(test_curve->x.begin(), test_curve->x.begin() + curve_size);
+            curve_A.assign(test_curve->targetA.begin(), test_curve->targetA.begin() + curve_size);
+            curve_B.assign(test_curve->targetB.begin(), test_curve->targetB.begin() + curve_size);
+            if (test_curve->x.size() != curve_size ||
+                test_curve->targetA.size() != curve_size ||
+                test_curve->targetB.size() != curve_size) {
+                std::cerr << "Warning: Test curve vectors have mismatched sizes. Truncating to "
+                          << curve_size << " entries." << std::endl;
+            }
+        }
     }
 
     outfile << "# Dataset comparison output\n";
@@ -130,6 +179,22 @@ void writeComparisonFile(
         outfile << dataset.x[i] << " " << dataset.dataPointsA[i] << " " << dataset.dataPointsB[i] << "\n";
     }
     outfile << "\n";
+
+    if (has_test_set) {
+        outfile << "# Test points (x, hiddenA, hiddenB)\n";
+        for (std::size_t i = 0; i < test_size; ++i) {
+            outfile << x_test[i] << " " << target_test_A[i] << " " << target_test_B[i] << "\n";
+        }
+        outfile << "\n";
+    }
+
+    if (has_test_curve) {
+        outfile << "# Test curve (x, hiddenA, hiddenB)\n";
+        for (std::size_t i = 0; i < curve_size; ++i) {
+            outfile << x_curve[i] << " " << curve_A[i] << " " << curve_B[i] << "\n";
+        }
+        outfile << "\n";
+    }
 
     for (const auto& method_entry : methods) {
         const std::string& method_name = method_entry.first;
@@ -153,8 +218,14 @@ void writeComparisonFile(
 
         std::vector<std::vector<double>> preds_A;
         std::vector<std::vector<double>> preds_B;
+        std::vector<std::vector<double>> test_preds_A;
+        std::vector<std::vector<double>> test_preds_B;
         preds_A.reserve(poly_set.polynomials.size());
         preds_B.reserve(poly_set.polynomials.size());
+        if (has_test_set) {
+            test_preds_A.reserve(poly_set.polynomials.size());
+            test_preds_B.reserve(poly_set.polynomials.size());
+        }
 
         for (std::size_t i = 0; i < poly_set.polynomials.size(); ++i) {
             std::vector<double> pred_A(x_pred.size());
@@ -163,6 +234,15 @@ void writeComparisonFile(
             predict(poly_set.polynomials[i], x_pred, results.fitted_params_B[i], pred_B);
             preds_A.push_back(std::move(pred_A));
             preds_B.push_back(std::move(pred_B));
+
+            if (has_test_set) {
+                std::vector<double> pred_test_A(x_test.size());
+                std::vector<double> pred_test_B(x_test.size());
+                predict(poly_set.polynomials[i], x_test, results.fitted_params_A[i], pred_test_A);
+                predict(poly_set.polynomials[i], x_test, results.fitted_params_B[i], pred_test_B);
+                test_preds_A.push_back(std::move(pred_test_A));
+                test_preds_B.push_back(std::move(pred_test_B));
+            }
         }
 
         outfile << "x_pred";
@@ -183,6 +263,29 @@ void writeComparisonFile(
                 outfile << " " << pred_vec[idx];
             }
             outfile << "\n";
+        }
+
+        if (has_test_set) {
+            outfile << "\n";
+            outfile << "x_test";
+            for (std::size_t order : results.orders) {
+                outfile << " testfit" << order << "_A";
+            }
+            for (std::size_t order : results.orders) {
+                outfile << " testfit" << order << "_B";
+            }
+            outfile << "\n";
+
+            for (std::size_t idx = 0; idx < x_test.size(); ++idx) {
+                outfile << x_test[idx];
+                for (const auto& pred_vec : test_preds_A) {
+                    outfile << " " << pred_vec[idx];
+                }
+                for (const auto& pred_vec : test_preds_B) {
+                    outfile << " " << pred_vec[idx];
+                }
+                outfile << "\n";
+            }
         }
 
         outfile << "\n";
