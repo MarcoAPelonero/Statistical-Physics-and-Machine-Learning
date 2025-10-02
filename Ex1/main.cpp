@@ -5,8 +5,14 @@
 int main(int argc, char** argv) {
     // Add a switch case if i want to select one excerice in specific or execute all of them based on the values read as argc
 
-    // You should excpect 0 1 or 2 variables. Default case is execute all, if
-    // the flag is swithced to single instead of all, then use the number to select which excercise to run
+    // You should expect 0, 1, 2 or 3 variables. Default case is execute all exercises,
+    // if the flag is switched to single, then use the number to select which exercise to run
+    // if the flag is comparison, run only the comparison function
+    // Examples: 
+    // ./main.exe
+    // ./main.exe default
+    // ./main.exe comparison
+    // ./main.exe single 3
 
     switch (argc) {
         case 1:
@@ -15,6 +21,24 @@ int main(int argc, char** argv) {
             exPointThree();
             exPointFour();
             exPointFive();
+            comparison();
+            break;
+        case 2:
+            if (std::string(argv[1]) == "default") {
+                // Run all exercises (same as case 1)
+                exPointOne();
+                exPointTwo();
+                exPointThree();
+                exPointFour();
+                exPointFive();
+                comparison();
+            } else if (std::string(argv[1]) == "comparison") {
+                // Run only comparison
+                comparison();
+            } else {
+                std::cerr << "Invalid argument. Use 'default', 'comparison', or 'single <number>'.\n";
+                return 1;
+            }
             break;
         case 3:
             if (std::string(argv[1]) == "single") {
@@ -43,6 +67,14 @@ int main(int argc, char** argv) {
                 std::cerr << "Invalid argument. Use 'single <number>' to run a specific exercise.\n";
                 return 1;
             }
-        }
+            break;
+        default:
+            std::cerr << "Too many arguments. Usage:\n";
+            std::cerr << "  No arguments: run all exercises\n";
+            std::cerr << "  default: run all exercises\n";
+            std::cerr << "  comparison: run only comparison\n";
+            std::cerr << "  single <number>: run specific exercise (1-5)\n";
+            return 1;
+    }
     return 0;
 }
