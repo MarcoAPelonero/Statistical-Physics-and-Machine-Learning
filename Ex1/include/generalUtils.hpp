@@ -52,6 +52,7 @@ void writeComparisonFile(
     const std::vector<std::pair<std::string, const FitResults*>>& methods,
     double noise_stddev,
     const TestSet* test_set = nullptr,
-    const CurveSet* test_curve = nullptr);
+    const CurveSet* test_curve = nullptr,
+    bool include_dataset = true);
 
 #endif // GENERAL_UTILS_HPP

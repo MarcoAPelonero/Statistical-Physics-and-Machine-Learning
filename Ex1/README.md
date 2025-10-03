@@ -76,6 +76,10 @@ $env:MPLBACKEND = "Agg"
 python -c "import excercisePlotter as p; p.exFivePlotter()"
 ```
 
+Note: Plots for exercises after exercise 4 (exercise 5 and onwards) use a logarithmic y-axis for
+comparison/fit plots. This helps visualise values that span several orders of magnitude. If you
+need linear-scale plots instead, open `utils/comparisonUtils.py` and adjust the y-scale logic.
+
 This creates PNG files alongside the corresponding data files for visualization.
 
 ### Output Files

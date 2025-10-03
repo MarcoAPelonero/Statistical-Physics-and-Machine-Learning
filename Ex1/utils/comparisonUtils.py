@@ -321,3 +321,134 @@ def plotComparisonFigure(filepath, title, output_path=None):
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
 
     plt.show()
+
+
+def plotMethodFigure(filepath, method_name, title=None, output_path=None):
+    """Plot a single method (e.g., 'GD' or 'SGD batch=10') from a comparison file.
+
+    Produces four subplots similar to the method-specific rows in plotComparisonFigure:
+    - fits for Dataset A
+    - fits for Dataset B
+    - parameters for Dataset A
+    - parameters for Dataset B
+    """
+    comparison = comparisonFileReader(filepath)
+    data = comparison['data']
+    test_data = comparison.get('test_data', {'x': np.array([]), 'A': np.array([]), 'B': np.array([])})
+    test_curve = comparison.get('test_curve', {'x': np.array([]), 'A': np.array([]), 'B': np.array([])})
+    methods = comparison['methods']
+    orders = comparison['orders']
+
+    if method_name not in methods:
+        raise ValueError(f"Method '{method_name}' not found in file {filepath}. Available: {list(methods.keys())}")
+
+    method_data = methods[method_name]
+
+    x_train = data['x']
+    y_train_A = data['datapointsA']
+    y_train_B = data['datapointsB']
+
+    def _bounds_from_arrays(arrays, padding_ratio, default_pad):
+        collected = []
+        for arr in arrays:
+            if arr is None:
+                continue
+            arr_np = np.asarray(arr)
+            if arr_np.size > 0:
+                collected.append(arr_np)
+        if not collected:
+            return None
+        combined = np.concatenate(collected)
+        val_min, val_max = combined.min(), combined.max()
+        if np.isclose(val_min, val_max):
+            pad = default_pad
+        else:
+            pad = (val_max - val_min) * padding_ratio
+        return (val_min - pad, val_max + pad)
+
+    x_arrays = [x_train, test_data['x'], test_curve['x']]
+    if method_data.get('x_pred'):
+        x_arrays.append(method_data['x_pred'])
+    if method_data.get('x_test'):
+        x_arrays.append(method_data['x_test'])
+    x_bounds = _bounds_from_arrays(x_arrays, padding_ratio=0.1, default_pad=0.1)
+
+    yA_arrays = [y_train_A, test_data['A'], test_curve['A']]
+    yB_arrays = [y_train_B, test_data['B'], test_curve['B']]
+    for values in method_data['predictions']['A'].values():
+        yA_arrays.append(values)
+    for values in method_data['predictions']['B'].values():
+        yB_arrays.append(values)
+    yA_bounds = _bounds_from_arrays(yA_arrays, padding_ratio=0.15, default_pad=0.1)
+    yB_bounds = _bounds_from_arrays(yB_arrays, padding_ratio=0.15, default_pad=0.1)
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    _plot_comparison_fit(axes[0, 0], x_train, y_train_A, method_data, orders, 'A', method_name,
+                         x_bounds, yA_bounds, test_data, test_curve)
+    _plot_comparison_fit(axes[0, 1], x_train, y_train_B, method_data, orders, 'B', method_name,
+                         x_bounds, yB_bounds, test_data, test_curve)
+    _plot_comparison_parameters(axes[1, 0], method_data, orders, 'A', method_name)
+    _plot_comparison_parameters(axes[1, 1], method_data, orders, 'B', method_name)
+
+    if title:
+        fig.suptitle(title, fontsize=16)
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+
+    if output_path:
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+
+    plt.show()
+
+
+def plotMethodFitsOnly(filepath, method_name, title=None, output_path=None, xlim=(0, 1)):
+    """Plot only the fitted curves for a single method (datasets A and B) in a 1x2 layout.
+
+    This omits the parameter bar charts. The x-axis is limited to `xlim` (tuple).
+    """
+    comparison = comparisonFileReader(filepath)
+    data = comparison['data']
+    test_data = comparison.get('test_data', {'x': np.array([]), 'A': np.array([]), 'B': np.array([])})
+    test_curve = comparison.get('test_curve', {'x': np.array([]), 'A': np.array([]), 'B': np.array([])})
+    methods = comparison['methods']
+    orders = comparison['orders']
+
+    if method_name not in methods:
+        raise ValueError(f"Method '{method_name}' not found in file {filepath}. Available: {list(methods.keys())}")
+
+    method_data = methods[method_name]
+
+    x_train = data['x']
+    y_train_A = data['datapointsA']
+    y_train_B = data['datapointsB']
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Use _plot_comparison_fit but without parameter bars and with provided xlim
+    _plot_comparison_fit(axes[0], x_train, y_train_A, method_data, orders, 'A', method_name,
+                         x_bounds=None, y_bounds=None, test_data=test_data, test_curve=test_curve)
+    _plot_comparison_fit(axes[1], x_train, y_train_B, method_data, orders, 'B', method_name,
+                         x_bounds=None, y_bounds=None, test_data=test_data, test_curve=test_curve)
+
+    # Set x-limits if requested
+    if xlim is not None:
+        try:
+            axes[0].set_xlim(*xlim)
+            axes[1].set_xlim(*xlim)
+        except Exception:
+            pass
+    # Set y-limits as requested by user (-1 to 10)
+    try:
+        axes[0].set_ylim(-1, 10)
+        axes[1].set_ylim(-1, 10)
+    except Exception:
+        pass
+
+    if title:
+        fig.suptitle(title, fontsize=14)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+
+    if output_path:
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+
+    plt.show()

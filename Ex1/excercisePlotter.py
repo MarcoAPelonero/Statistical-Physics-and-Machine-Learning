@@ -5,6 +5,8 @@ import argparse
 from utils.excerciseUtils import ORDER_COLORS, DATASET_SCATTER_COLORS
 from utils.excerciseUtils import fileReader, dataPlotter, plotWithFits, fittedDataReader
 from utils.comparisonUtils import plotComparisonFigure
+from utils.comparisonUtils import plotMethodFigure
+from utils.comparisonUtils import plotMethodFitsOnly
 
 def exOnePlotter():
     return
@@ -80,6 +82,32 @@ def exSevenPlotter(save_plot=False):
     if save_plot and output_path:
         print(f"Plot saved as {output_path}")
 
+    # Also produce single-method figures: GD and SGD
+    try:
+        gd_output = 'exercise7_gd_plot.png' if save_plot else None
+        sgd_output = 'exercise7_sgd_plot.png' if save_plot else None
+        plotMethodFigure(filepath, 'GD', title='Exercise 7: GD only (100 samples)', output_path=gd_output)
+        if save_plot and gd_output:
+            print(f"GD-only plot saved as {gd_output}")
+        plotMethodFigure(filepath, 'SGD batch=10', title='Exercise 7: SGD only (100 samples)', output_path=sgd_output)
+        if save_plot and sgd_output:
+            print(f"SGD-only plot saved as {sgd_output}")
+    except Exception as e:
+        print(f"Could not produce single-method plots for Exercise 7: {e}")
+
+    # Also produce fits-only figures (no weights) with x axis clipped to [0,1]
+    try:
+        gd_fits_output = 'exercise7_gd_fits_only.png' if save_plot else None
+        sgd_fits_output = 'exercise7_sgd_fits_only.png' if save_plot else None
+        plotMethodFitsOnly(filepath, 'GD', title='Exercise 7: GD fits only', output_path=gd_fits_output, xlim=(0, 1))
+        if save_plot and gd_fits_output:
+            print(f"GD fits-only plot saved as {gd_fits_output}")
+        plotMethodFitsOnly(filepath, 'SGD batch=10', title='Exercise 7: SGD fits only', output_path=sgd_fits_output, xlim=(0, 1))
+        if save_plot and sgd_fits_output:
+            print(f"SGD fits-only plot saved as {sgd_fits_output}")
+    except Exception as e:
+        print(f"Could not produce fits-only plots for Exercise 7: {e}")
+
 def exNinePlotter(save_plot=False):
     filepath = 'exercise9_comparison.txt'
     if not os.path.exists(filepath):
@@ -91,6 +119,32 @@ def exNinePlotter(save_plot=False):
     plotComparisonFigure(filepath, title, output_path=output_path)
     if save_plot and output_path:
         print(f"Plot saved as {output_path}")
+
+    # Also produce single-method figures: GD and SGD
+    try:
+        gd_output = 'exercise9_gd_plot.png' if save_plot else None
+        sgd_output = 'exercise9_sgd_plot.png' if save_plot else None
+        plotMethodFigure(filepath, 'GD', title='Exercise 9: GD only (10k samples)', output_path=gd_output)
+        if save_plot and gd_output:
+            print(f"GD-only plot saved as {gd_output}")
+        plotMethodFigure(filepath, 'SGD batch=10', title='Exercise 9: SGD only (10k samples)', output_path=sgd_output)
+        if save_plot and sgd_output:
+            print(f"SGD-only plot saved as {sgd_output}")
+    except Exception as e:
+        print(f"Could not produce single-method plots for Exercise 9: {e}")
+
+    # Also produce fits-only figures (no weights) with x axis clipped to [0,1]
+    try:
+        gd_fits_output = 'exercise9_gd_fits_only.png' if save_plot else None
+        sgd_fits_output = 'exercise9_sgd_fits_only.png' if save_plot else None
+        plotMethodFitsOnly(filepath, 'GD', title='Exercise 9: GD fits only', output_path=gd_fits_output, xlim=(0, 1))
+        if save_plot and gd_fits_output:
+            print(f"GD fits-only plot saved as {gd_fits_output}")
+        plotMethodFitsOnly(filepath, 'SGD batch=10', title='Exercise 9: SGD fits only', output_path=sgd_fits_output, xlim=(0, 1))
+        if save_plot and sgd_fits_output:
+            print(f"SGD fits-only plot saved as {sgd_fits_output}")
+    except Exception as e:
+        print(f"Could not produce fits-only plots for Exercise 9: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Exercise plotter with configurable options')

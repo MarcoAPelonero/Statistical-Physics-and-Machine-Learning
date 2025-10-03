@@ -111,7 +111,8 @@ void writeComparisonFile(
     const std::vector<std::pair<std::string, const FitResults*>>& methods,
     double noise_stddev,
     const TestSet* test_set,
-    const CurveSet* test_curve) {
+    const CurveSet* test_curve,
+    bool include_dataset) {
     std::ofstream outfile(filename);
     if (!outfile.is_open()) {
         std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
@@ -173,12 +174,14 @@ void writeComparisonFile(
     }
     outfile << "\n\n";
 
-    outfile << "# Dataset\n";
-    outfile << "x dataPointA dataPointB\n";
-    for (std::size_t i = 0; i < dataset.x.size(); ++i) {
-        outfile << dataset.x[i] << " " << dataset.dataPointsA[i] << " " << dataset.dataPointsB[i] << "\n";
+    if (include_dataset) {
+        outfile << "# Dataset\n";
+        outfile << "x dataPointA dataPointB\n";
+        for (std::size_t i = 0; i < dataset.x.size(); ++i) {
+            outfile << dataset.x[i] << " " << dataset.dataPointsA[i] << " " << dataset.dataPointsB[i] << "\n";
+        }
+        outfile << "\n";
     }
-    outfile << "\n";
 
     if (has_test_set) {
         outfile << "# Test points (x, hiddenA, hiddenB)\n";
