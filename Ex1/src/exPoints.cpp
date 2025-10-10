@@ -186,7 +186,7 @@ void exPointNine()
                                                                 gd_options.l2,
                                                                 gd_options.verbose,
                                                                 gd_options.print_every,
-                                                                10,
+                                                                100,
                                                                 false,
                                                                 1.0,
                                                                 0);

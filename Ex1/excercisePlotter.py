@@ -127,7 +127,7 @@ def exNinePlotter(save_plot=False):
         plotMethodFigure(filepath, 'GD', title='Exercise 9: GD only (10k samples)', output_path=gd_output)
         if save_plot and gd_output:
             print(f"GD-only plot saved as {gd_output}")
-        plotMethodFigure(filepath, 'SGD batch=10', title='Exercise 9: SGD only (10k samples)', output_path=sgd_output)
+        plotMethodFigure(filepath, 'SGD batch=100', title='Exercise 9: SGD only (10k samples)', output_path=sgd_output)
         if save_plot and sgd_output:
             print(f"SGD-only plot saved as {sgd_output}")
     except Exception as e:
@@ -140,7 +140,7 @@ def exNinePlotter(save_plot=False):
         plotMethodFitsOnly(filepath, 'GD', title='Exercise 9: GD fits only', output_path=gd_fits_output, xlim=(0, 1))
         if save_plot and gd_fits_output:
             print(f"GD fits-only plot saved as {gd_fits_output}")
-        plotMethodFitsOnly(filepath, 'SGD batch=10', title='Exercise 9: SGD fits only', output_path=sgd_fits_output, xlim=(0, 1))
+        plotMethodFitsOnly(filepath, 'SGD batch=100', title='Exercise 9: SGD fits only', output_path=sgd_fits_output, xlim=(0, 1))
         if save_plot and sgd_fits_output:
             print(f"SGD fits-only plot saved as {sgd_fits_output}")
     except Exception as e:
