@@ -19,6 +19,11 @@ OBJECTS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 MAIN_EXE := $(BIN_DIR)/main$(EXE_EXT)
 
+ifeq ($(MP),1)
+	CXXFLAGS += -fopenmp
+	LDFLAGS += -fopenmp
+endif
+
 $(BUILD_DIR) $(BIN_DIR):
 	@mkdir "$@"
 
