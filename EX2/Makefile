@@ -9,7 +9,9 @@ BIN_DIR    = bin
 
 EXE_EXT :=
 ifeq ($(OS),Windows_NT)
-  EXE_EXT := .exe
+	SHELL := cmd.exe
+	.SHELLFLAGS := /C
+	EXE_EXT := .exe
 endif
 
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
@@ -18,7 +20,7 @@ OBJECTS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 MAIN_EXE := $(BIN_DIR)/main$(EXE_EXT)
 
 $(BUILD_DIR) $(BIN_DIR):
-	@mkdir -p $@
+	@mkdir "$@"
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -43,7 +45,11 @@ test:
 else
 test: $(BIN_DIR)/test_$(FILE)$(EXE_EXT)
 	@echo ">> Running test for $(FILE)..."
+ifeq ($(OS),Windows_NT)
+	@"$(subst /,\\,$(BIN_DIR)/test_$(FILE)$(EXE_EXT))"
+else
 	@./$(BIN_DIR)/test_$(FILE)$(EXE_EXT)
+endif
 endif
 
 compile: $(MAIN_EXE)
@@ -51,13 +57,23 @@ compile: $(MAIN_EXE)
 
 run: $(MAIN_EXE)
 	@echo ">> Running main executable..."
+ifeq ($(OS),Windows_NT)
+	@"$(subst /,\\,$(MAIN_EXE))"
+else
 	@./$(MAIN_EXE)
+endif
 
 .PHONY: test clean compile run
 
 clean:
+ifeq ($(OS),Windows_NT)
+	-@cmd /C if exist "$(BUILD_DIR)" rmdir /S /Q "$(BUILD_DIR)"
+	-@cmd /C if exist "$(BIN_DIR)" rmdir /S /Q "$(BIN_DIR)"
+	-@cmd /C del /Q /F *.txt 2> NUL || exit 0
+else
 	@rm -rf $(BUILD_DIR) $(BIN_DIR)
 	@rm -f *.txt $(BUILD_DIR)/*.txt $(BIN_DIR)/*.txt
+endif
 
 -include $(OBJECTS:.o=.d)
 -include $(BUILD_DIR)/test_*.d
