@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
             exPointSeven();
             exPointEight();
             exPointNine();
+            exPointTen();
             comparison();
             break;
         case 2:
@@ -38,6 +39,7 @@ int main(int argc, char** argv) {
                 exPointSeven();
                 exPointEight();
                 exPointNine();
+                exPointTen();
             } else if (std::string(argv[1]) == "comparison") {
                 comparison();
             } else {
@@ -76,8 +78,11 @@ int main(int argc, char** argv) {
                     case 9:
                         exPointNine();
                         break;
+                    case 10: 
+                        exPointTen();
+                        break;
                     default:
-                        std::cerr << "Invalid exercise number. Please choose between 1 and 9.\n";
+                        std::cerr << "Invalid exercise number. Please choose between 1 and 10.\n";
                         return 1;
                 }
             } else {

@@ -24,6 +24,12 @@ ifeq ($(MP),1)
 	LDFLAGS += -fopenmp
 endif
 
+# Also allow enabling OpenMP using OMP=1 (alias for MP=1)
+ifeq ($(OMP),1)
+	CXXFLAGS += -fopenmp
+	LDFLAGS += -fopenmp
+endif
+
 $(BUILD_DIR) $(BIN_DIR):
 	@mkdir -p "$@"
 
@@ -67,6 +73,11 @@ ifeq ($(OS),Windows_NT)
 else
 	@./$(MAIN_EXE)
 endif
+
+# Convenience target: build and run with OpenMP enabled
+.PHONY: run-omp
+run-omp:
+	$(MAKE) run OMP=1
 
 .PHONY: test clean compile run
 
