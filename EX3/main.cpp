@@ -81,8 +81,14 @@ int main(int argc, char** argv) {
                     case 10: 
                         exPointTen();
                         break;
+                    case 11:
+                        extraPointOne();
+                        break;
+                    case 12:
+                        extraPointTwo();
+                        break;
                     default:
-                        std::cerr << "Invalid exercise number. Please choose between 1 and 10.\n";
+                        std::cerr << "Invalid exercise number. Please choose between 1 and 12.\n";
                         return 1;
                 }
             } else {

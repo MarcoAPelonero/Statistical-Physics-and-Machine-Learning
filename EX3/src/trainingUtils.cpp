@@ -18,23 +18,35 @@ Dataset generateDataset(int P, std::optional<unsigned> seed, int bits) {
     std::mt19937 rng(seed.value());
     // bits is provided by caller; default is 10 at declaration site
     assert(bits > 0);
-    std::uniform_int_distribution<int> dist(0, (1 << bits) - 1);
+    std::uniform_int_distribution<int> bitDist(0, 1);
 
-    for (int i = 0; i < P; ++i) {
-        int a = 0;
-        int b = 0;
-        // Resample until the pair encodes a strictly ordered comparison.
-        do {
-            a = dist(rng);
-            b = dist(rng);
-        } while (a == b);
+    auto makeScalar = [&](void) -> Scalar {
+        Scalar s(bits);
+        for (int idx = 0; idx < bits; ++idx) {
+            s[idx] = bitDist(rng) ? +1 : -1;
+        }
+        return s;
+    };
 
-    const Scalar sa = Scalar::fromInt(a, bits);
-    const Scalar sb = Scalar::fromInt(b, bits);
-        int label = 0;
-        if (a > b) label = +1;
-        else if (a < b) label = -1;
+    auto compareScalars = [&](const Scalar& a, const Scalar& b) -> int {
+        for (int idx = 0; idx < bits; ++idx) {
+            const int bitA = (a[idx] + 1) / 2;
+            const int bitB = (b[idx] + 1) / 2;
+            if (bitA != bitB) {
+                return (bitA > bitB) ? +1 : -1;
+            }
+        }
+        return 0;
+    };
+
+    int generated = 0;
+    while (generated < P) {
+        Scalar sa = makeScalar();
+        Scalar sb = makeScalar();
+        int label = compareScalars(sa, sb);
+        if (label == 0) continue; // resample until strictly ordered
         ds.add(sa, sb, label);
+        ++generated;
     }
     return ds;
 }

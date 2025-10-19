@@ -1,16 +1,175 @@
 #include "exPoints.hpp"
 
 #include <chrono>
+#include <exception>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <string>
 #include <vector>
 #include <array>
 #include <numeric>
 #include <cmath>
 #include <thread>
 #include <atomic>
+#include <algorithm>
+#include <sstream>
+#include <cstdlib>
+
+namespace {
+
+constexpr const char* kExtraOutputDir = "plots";
+
+void ensureDirectory(const std::string& path) {
+    try {
+        std::filesystem::create_directories(path);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: could not create directory '" << path << "': " << e.what() << "\n";
+    }
+}
+
+struct RunningStats {
+    int count = 0;
+    double mean = 0.0;
+    double m2 = 0.0;
+
+    void add(double value) {
+        ++count;
+        const double delta = value - mean;
+        mean += delta / static_cast<double>(count);
+        const double delta2 = value - mean;
+        m2 += delta * delta2;
+    }
+
+    double meanValue() const { return mean; }
+
+    double stddev() const {
+        if (count <= 0) return 0.0;
+        return std::sqrt(m2 / static_cast<double>(count));
+    }
+};
+
+struct SweepResult {
+    int bits = 0;
+    std::vector<int> datasetSizes;
+    std::vector<double> meanAccuracy;
+    std::vector<double> stdAccuracy;
+};
+
+std::vector<int> datasetSizesForBits(int bits) {
+    if (bits == 10) return {1, 10, 20, 50, 100, 150, 200};
+    if (bits == 20) return {1, 2, 20, 40, 100, 200, 300};
+
+    std::vector<int> base = {1, 2, 20, 40, 100, 200, 300};
+    std::vector<int> scaled;
+    scaled.reserve(base.size());
+    const double scale = static_cast<double>(bits) / 20.0;
+    int previous = 0;
+    for (int value : base) {
+        int scaledValue = static_cast<int>(std::round(value * scale));
+        if (scaledValue < 1) scaledValue = 1;
+        if (scaledValue <= previous) {
+            scaledValue = previous + std::max(1, static_cast<int>(scale));
+        }
+        scaled.push_back(scaledValue);
+        previous = scaledValue;
+    }
+    return scaled;
+}
+
+template <int Bits>
+SweepResult runAccuracySweep(int numTrials, int maxEpochs,
+                             const std::vector<int>& datasetSizes,
+                             const std::string& label) {
+    constexpr int N = Bits * 2;
+    const double noiseSigma = std::sqrt(50.0);
+
+    std::vector<RunningStats> stats(datasetSizes.size());
+    const int reportEvery = std::max(1, numTrials / 10);
+
+    for (int trial = 0; trial < numTrials; ++trial) {
+        Dataset testDataset = generateDataset(1000, std::nullopt, Bits);
+        for (std::size_t idx = 0; idx < datasetSizes.size(); ++idx) {
+            Dataset trainDataset = generateDataset(datasetSizes[idx], std::nullopt, Bits);
+            Perceptron<N> student;
+            std::normal_distribution<double> dist(0.0, noiseSigma);
+            TrainPerceptron(student, trainDataset, maxEpochs, "", -1, FileLogMode::EveryEpoch, dist);
+
+            int correct = 0;
+            for (int j = 0; j < testDataset.getSize(); ++j) {
+                const auto& el = testDataset[j];
+                const int pred = student.compare(el.top, el.bottom);
+                if (pred == el.label) ++correct;
+            }
+            const double accuracy = 100.0 * static_cast<double>(correct) / static_cast<double>(testDataset.getSize());
+            stats[idx].add(accuracy);
+        }
+        if ((trial + 1) % reportEvery == 0 || (trial + 1) == numTrials) {
+            std::cout << "\r    " << label << " trial " << (trial + 1) << "/" << numTrials << std::flush;
+        }
+    }
+    if (numTrials > 0) {
+        std::cout << "\r    " << label << " trial " << numTrials << "/" << numTrials
+                  << " (done)" << std::string(10, ' ') << "\n";
+    }
+
+    SweepResult result;
+    result.bits = Bits;
+    result.datasetSizes = datasetSizes;
+    result.meanAccuracy.reserve(datasetSizes.size());
+    result.stdAccuracy.reserve(datasetSizes.size());
+    for (const auto& st : stats) {
+        result.meanAccuracy.push_back(st.meanValue());
+        result.stdAccuracy.push_back(st.stddev());
+    }
+    return result;
+}
+
+int parsePositiveEnv(const char* name, int fallback) {
+    if (!name) return fallback;
+    if (const char* raw = std::getenv(name)) {
+        try {
+            const int value = std::stoi(raw);
+            if (value > 0) return value;
+            std::cerr << "Warning: ignoring non-positive value '" << raw
+                      << "' for " << name << ", using " << fallback << ".\n";
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: could not parse " << name << "='" << raw
+                      << "': " << e.what() << ". Using " << fallback << ".\n";
+        }
+    }
+    return fallback;
+}
+
+std::vector<double> parseSigmaListFromEnv(const char* name,
+                                          const std::vector<double>& defaults) {
+    if (!name) return defaults;
+    const char* raw = std::getenv(name);
+    if (!raw) return defaults;
+
+    std::vector<double> values;
+    std::stringstream ss(raw);
+    std::string token;
+    while (std::getline(ss, token, ',')) {
+        if (token.empty()) continue;
+        try {
+            values.push_back(std::stod(token));
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: ignoring sigma token '" << token
+                      << "' (" << e.what() << ")\n";
+        }
+    }
+    if (values.empty()) {
+        std::cerr << "Warning: no valid sigma parsed from " << name
+                  << ", using defaults.\n";
+        return defaults;
+    }
+    return values;
+}
+
+} // namespace
 
 void exPointOne() {
     std::cout << "\n=== Exercise 1: Initialize the perfect Perceptron called \"teacher\" ===\n";
@@ -342,6 +501,180 @@ void exPointEight() {
     }
     std::cout.unsetf(std::ios::floatfield);
 
+}
+
+void extraPointOne() {
+    std::cout << "\n=== Extra Point 1: Noise sweep on 10-bit comparator (repeated trials) ===\n";
+    constexpr int bits = 10;
+    constexpr int N = bits * 2;
+
+    const int trainingExamples = parsePositiveEnv("EXTRA_TRAIN_SIZE", 100);
+    const int testExamples = parsePositiveEnv("EXTRA_TEST_SIZE", 1000);
+    const int numTrials = parsePositiveEnv("EXTRA_TRIALS", 50);
+    const std::vector<double> sigmas = parseSigmaListFromEnv(
+        "EXTRA_SIGMAS",
+        {0.0, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, std::sqrt(50.0), 10.0});
+
+    ensureDirectory(kExtraOutputDir);
+    const std::string outputPath = std::string(kExtraOutputDir) + "/extra_point_one.csv";
+    std::ofstream ofs(outputPath);
+    std::ios::fmtflags csvOldFlags{};
+    std::streamsize csvOldPrecision = 0;
+    if (!ofs) {
+        std::cerr << "Warning: unable to open '" << outputPath << "' for writing.\n";
+    } else {
+        csvOldFlags = ofs.flags();
+        csvOldPrecision = ofs.precision();
+        ofs << "sigma,train_size,test_size,trials,"
+               "mean_accuracy,std_accuracy,"
+               "mean_epochs,std_epochs,"
+               "mean_errors,std_errors\n";
+        ofs << std::fixed << std::setprecision(6);
+    }
+
+    const auto oldFlags = std::cout.flags();
+    const std::streamsize oldPrecision = std::cout.precision();
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Training examples per trial: " << trainingExamples
+              << ", test examples: " << testExamples
+              << ", trials per sigma: " << numTrials << "\n";
+
+    for (double sigma : sigmas) {
+        RunningStats accStats;
+        RunningStats epochStats;
+        RunningStats errorStats;
+
+        const int reportEvery = std::max(1, numTrials / 10);
+
+        for (int trial = 0; trial < numTrials; ++trial) {
+            Dataset trainingDataset = generateDataset(trainingExamples, std::nullopt, bits);
+            Dataset testDataset = generateDataset(testExamples, std::nullopt, bits);
+            Perceptron<N> student;
+            std::normal_distribution<double> dist(0.0, sigma);
+
+            TrainingStats stats = TrainPerceptron(student, trainingDataset, 20000, "", -1, FileLogMode::EveryEpoch, dist);
+
+            int correct = 0;
+            for (int i = 0; i < testDataset.getSize(); ++i) {
+                const auto& el = testDataset[i];
+                const int pred = student.compare(el.top, el.bottom);
+                if (pred == el.label) ++correct;
+            }
+            const double accuracy = 100.0 * static_cast<double>(correct) / static_cast<double>(testDataset.getSize());
+
+            accStats.add(accuracy);
+            epochStats.add(static_cast<double>(stats.epochsRun));
+            errorStats.add(static_cast<double>(stats.lastEpochErrors));
+
+            if ((trial + 1) % reportEvery == 0 || (trial + 1) == numTrials) {
+                std::cout << "\r  sigma=" << std::setw(7) << sigma
+                          << " trial " << std::setw(4) << (trial + 1) << "/" << numTrials
+                          << std::flush;
+            }
+        }
+        std::cout << "\r  sigma=" << std::setw(7) << sigma
+                  << " mean accuracy=" << std::setw(6) << accStats.meanValue() << "% ± "
+                  << std::setw(5) << accStats.stddev()
+                  << ", mean epochs=" << std::setw(6) << epochStats.meanValue() << " ± "
+                  << std::setw(5) << epochStats.stddev()
+                  << ", mean errors=" << std::setw(6) << errorStats.meanValue() << " ± "
+                  << std::setw(5) << errorStats.stddev()
+                  << std::string(10, ' ') << "\n";
+
+        if (ofs) {
+            ofs << sigma << "," << trainingExamples << "," << testExamples << "," << numTrials << ","
+                << accStats.meanValue() << "," << accStats.stddev() << ","
+                << epochStats.meanValue() << "," << epochStats.stddev() << ","
+                << errorStats.meanValue() << "," << errorStats.stddev() << "\n";
+        }
+    }
+
+    std::cout.flags(oldFlags);
+    std::cout.precision(oldPrecision);
+
+    if (ofs) {
+        ofs.flags(csvOldFlags);
+        ofs.precision(csvOldPrecision);
+    }
+}
+
+void extraPointTwo() {
+    std::cout << "\n=== Extra Point 2: Accuracy sweeps across bit widths ===\n";
+    constexpr int numTrials = 200;
+    constexpr int maxEpochs = 10000;
+    const std::array<int, 7> bitWidths = {10, 20, 40, 60, 80, 100, 120};
+
+    ensureDirectory(kExtraOutputDir);
+    const std::string outputPath = std::string(kExtraOutputDir) + "/extra_point_two.csv";
+    std::ofstream ofs(outputPath);
+    std::ios::fmtflags csvOldFlags{};
+    std::streamsize csvOldPrecision = 0;
+    if (!ofs) {
+        std::cerr << "Warning: unable to open '" << outputPath << "' for writing.\n";
+    } else {
+        csvOldFlags = ofs.flags();
+        csvOldPrecision = ofs.precision();
+        ofs << "bits,dataset_size,mean_accuracy,std_accuracy\n";
+        ofs << std::fixed << std::setprecision(6);
+    }
+
+    const auto oldFlags = std::cout.flags();
+    const std::streamsize oldPrecision = std::cout.precision();
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Running " << numTrials << " trials per configuration (maxEpochs=" << maxEpochs << ").\n";
+
+    for (int bits : bitWidths) {
+        const std::vector<int> dataSizes = datasetSizesForBits(bits);
+        std::cout << "  bits=" << std::setw(3) << bits << " datasets:";
+        for (int sz : dataSizes) std::cout << ' ' << sz;
+        std::cout << "\n";
+
+        SweepResult result;
+        switch (bits) {
+            case 10:
+                result = runAccuracySweep<10>(numTrials, maxEpochs, dataSizes, "bits=10");
+                break;
+            case 20:
+                result = runAccuracySweep<20>(numTrials, maxEpochs, dataSizes, "bits=20");
+                break;
+            case 40:
+                result = runAccuracySweep<40>(numTrials, maxEpochs, dataSizes, "bits=40");
+                break;
+            case 60:
+                result = runAccuracySweep<60>(numTrials, maxEpochs, dataSizes, "bits=60");
+                break;
+            case 80:
+                result = runAccuracySweep<80>(numTrials, maxEpochs, dataSizes, "bits=80");
+                break;
+            case 100:
+                result = runAccuracySweep<100>(numTrials, maxEpochs, dataSizes, "bits=100");
+                break;
+            case 120:
+                result = runAccuracySweep<120>(numTrials, maxEpochs, dataSizes, "bits=120");
+                break;
+            default:
+                std::cerr << "Unsupported bit width requested: " << bits << "\n";
+                continue;
+        }
+
+        for (std::size_t idx = 0; idx < result.datasetSizes.size(); ++idx) {
+            std::cout << "    P=" << std::setw(6) << result.datasetSizes[idx]
+                      << " -> mean=" << std::setw(6) << result.meanAccuracy[idx]
+                      << "%, std=" << std::setw(6) << result.stdAccuracy[idx] << "%\n";
+            if (ofs) {
+                ofs << result.bits << "," << result.datasetSizes[idx] << ","
+                    << result.meanAccuracy[idx] << "," << result.stdAccuracy[idx] << "\n";
+            }
+        }
+    }
+
+    std::cout.flags(oldFlags);
+    std::cout.precision(oldPrecision);
+
+    if (ofs) {
+        ofs.flags(csvOldFlags);
+        ofs.precision(csvOldPrecision);
+    }
 }
 
 void exPointNine() {

@@ -4,6 +4,7 @@ Exercise Plotters
 
 Usage:
   python exercise_plotters.py --exercise 8
+  python exercise_plotters.py --exercise 10
   python exercise_plotters.py --all
 """
 
@@ -110,10 +111,61 @@ class ExerciseEightPlotter:
         else:
             plt.close()
 
+# ---------- Exercise 10 (Data collapse: accuracy vs alpha = P/N) ----------
+class ExerciseTenPlotter:
+    @staticmethod
+    def _alpha_curve(curve: AccuracyCurve, N_weights: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Returns alpha = P/N, mean acc, std acc for a given curve and number of weights N.
+        """
+        P = np.array(curve.dataset_sizes, dtype=float)
+        alpha = P / float(N_weights)
+        mu = np.array(curve.mean_accuracy, dtype=float)
+        sigma = np.array(curve.std_accuracy, dtype=float)
+        return alpha, mu, sigma
+
+    @staticmethod
+    def plot(show: bool = True, save_path: Optional[str] = None) -> None:
+        # Reuse Exercise 8 datasets
+        d20 = ExerciseEightPlotter.data_20bits()
+        d40 = ExerciseEightPlotter.data_40bits()
+
+        # N is the number of trainable weights (here: "bits")
+        N20 = 20
+        N40 = 40
+
+        a20, mu20, s20 = ExerciseTenPlotter._alpha_curve(d20, N20)
+        a40, mu40, s40 = ExerciseTenPlotter._alpha_curve(d40, N40)
+
+        plt.figure()
+
+        plt.plot(a20, mu20, marker="o", label=f"N={N20}")
+        plt.fill_between(a20, mu20 - s20, mu20 + s20, alpha=0.2)
+
+        plt.plot(a40, mu40, marker="o", label=f"N={N40}")
+        plt.fill_between(a40, mu40 - s40, mu40 + s40, alpha=0.2)
+
+        plt.title(r"Exercise 10 — Data Collapse: Accuracy vs $\alpha=P/N$")
+        plt.xlabel(r"$\alpha$ (patterns per weight)")
+        plt.ylabel("Accuracy (%)")  # or plot 100 - accuracy for test error
+        plt.ylim(0, 100)
+        plt.grid(True, linestyle="--", linewidth=0.5)
+        plt.legend()
+        plt.tight_layout()
+
+        if save_path:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            plt.savefig(save_path, bbox_inches="tight")
+        if show:
+            plt.show()
+        else:
+            plt.close()
+
 # ---------- Registry ----------
 PLOTTERS: Dict[int, Callable[..., None]] = {
     7: ExerciseSevenPlotter.plot,
     8: ExerciseEightPlotter.plot,
+    10: ExerciseTenPlotter.plot,
 }
 
 # ---------- CLI ----------
