@@ -87,8 +87,11 @@ int main(int argc, char** argv) {
                     case 12:
                         extraPointTwo();
                         break;
+                    case 13:
+                        extraPointThree();
+                        break;
                     default:
-                        std::cerr << "Invalid exercise number. Please choose between 1 and 12.\n";
+                        std::cerr << "Invalid exercise number. Please choose between 1 and 13.\n";
                         return 1;
                 }
             } else {
@@ -97,12 +100,12 @@ int main(int argc, char** argv) {
             }
             break;
         default:
-            std::cerr << "Too many arguments. Usage:\n";
-            std::cerr << "  No arguments: run all exercises\n";
-            std::cerr << "  default: run all exercises\n";
-            std::cerr << "  comparison: run only comparison\n";
-            std::cerr << "  single <number>: run specific exercise (1-5)\n";
-            return 1;
+        std::cerr << "Too many arguments. Usage:\n";
+        std::cerr << "  No arguments: run all exercises\n";
+        std::cerr << "  default: run all exercises\n";
+        std::cerr << "  comparison: run only comparison\n";
+        std::cerr << "  single <number>: run specific exercise (1-13)\n";
+        return 1;
     }
     return 0;
 }
