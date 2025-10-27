@@ -1,5 +1,5 @@
 CXX       ?= g++
-CXXFLAGS  ?= -std=c++17 -O2 -Wall -Wextra -Iinclude -MMD -MP
+CXXFLAGS  ?= -std=c++17 -O3 -Wall -Wextra -Iinclude -MMD -MP
 LDFLAGS   ?=
 SRC_DIR    = src
 INC_DIR    = include
@@ -8,10 +8,10 @@ BUILD_DIR  = build
 BIN_DIR    = bin
 
 EXE_EXT :=
+
+# Add .exe on Windows hosts (MSYS/MinGW still define Windows_NT)
 ifeq ($(OS),Windows_NT)
-	SHELL := cmd.exe
-	.SHELLFLAGS := /C
-	EXE_EXT := .exe
+EXE_EXT := .exe
 endif
 
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
@@ -25,7 +25,7 @@ ifeq ($(MP),1)
 endif
 
 $(BUILD_DIR) $(BIN_DIR):
-	@mkdir "$@"
+	@mkdir -p "$@"
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -71,14 +71,10 @@ endif
 .PHONY: test clean compile run
 
 clean:
-ifeq ($(OS),Windows_NT)
-	-@cmd /C if exist "$(BUILD_DIR)" rmdir /S /Q "$(BUILD_DIR)"
-	-@cmd /C if exist "$(BIN_DIR)" rmdir /S /Q "$(BIN_DIR)"
-	-@cmd /C del /Q /F *.txt 2> NUL || exit 0
-else
-	@rm -rf $(BUILD_DIR) $(BIN_DIR)
-	@rm -f *.txt $(BUILD_DIR)/*.txt $(BIN_DIR)/*.txt
-endif
+	@rm -rf "$(BUILD_DIR)" "$(BIN_DIR)" 2> NUL || true
+	@rm -f *.txt $(BUILD_DIR)/*.txt $(BIN_DIR)/*.txt 2> NUL || true
+	@rm -f *.log $(BUILD_DIR)/*.log $(BIN_DIR)/*.log 2> NUL || true
 
 -include $(OBJECTS:.o=.d)
+-include $(BUILD_DIR)/main.d
 -include $(BUILD_DIR)/test_*.d
