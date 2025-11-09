@@ -14,6 +14,7 @@ void exPointFive();
 void exPointSix();
 void exPointSeven();
 void exPointEight();
+void extraPointFour();
 void extraPointOne();
 void extraPointTwo();
 void extraPointThree();

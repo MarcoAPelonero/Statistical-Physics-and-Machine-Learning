@@ -1057,6 +1057,57 @@ void extraPointThree() {
     std::cout << "Wrote: " << outPath << "\n";
 }
 
+void extraPointFour() {
+    std::cout << "\n=== Extra Point 4: Full accuracy sweep for 80-bit comparator ===\n";
+    constexpr int bits = 80;
+
+    // knobs (env overrides)
+    const int numTrials = parsePositiveEnv("EXTRA4_TRIALS", 200);
+    const int maxEpochs = parsePositiveEnv("EXTRA4_MAX_EPOCHS", 10000);
+
+    ensureDirectory(kExtraOutputDir);
+    const std::string outputPath = std::string(kExtraOutputDir) + "/extra_point_four.csv";
+    std::ofstream ofs(outputPath);
+    std::ios::fmtflags csvOldFlags{};
+    std::streamsize csvOldPrecision = 0;
+    if (!ofs) {
+        std::cerr << "Warning: unable to open '" << outputPath << "' for writing.\n";
+    } else {
+        csvOldFlags = ofs.flags();
+        csvOldPrecision = ofs.precision();
+        ofs << "bits,dataset_size,mean_accuracy,std_accuracy\n";
+        ofs << std::fixed << std::setprecision(6);
+    }
+
+    const auto oldFlags = std::cout.flags();
+    const auto oldPrecision = std::cout.precision();
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Running " << numTrials << " trials for bits=" << bits << " (maxEpochs=" << maxEpochs << ").\n";
+
+    const std::vector<int> dataSizes = datasetSizesForBits(bits);
+    SweepResult result = runAccuracySweep<80>(numTrials, maxEpochs, dataSizes, "bits=80");
+
+    for (std::size_t idx = 0; idx < result.datasetSizes.size(); ++idx) {
+        std::cout << "  P=" << std::setw(6) << result.datasetSizes[idx]
+                  << " -> mean=" << std::setw(6) << result.meanAccuracy[idx]
+                  << "%, std=" << std::setw(6) << result.stdAccuracy[idx] << "%\n";
+        if (ofs) {
+            ofs << result.bits << "," << result.datasetSizes[idx] << ","
+                << result.meanAccuracy[idx] << "," << result.stdAccuracy[idx] << "\n";
+        }
+    }
+
+    std::cout.flags(oldFlags);
+    std::cout.precision(oldPrecision);
+
+    if (ofs) {
+        ofs.flags(csvOldFlags);
+        ofs.precision(csvOldPrecision);
+        ofs.close();
+        std::cout << "Wrote: " << outputPath << "\n";
+    }
+}
+
 
 void exPointNine() {
     std::cout << "\n=== Exercise 9: Not yet implemented ===\n";
