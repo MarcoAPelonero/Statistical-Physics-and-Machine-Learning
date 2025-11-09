@@ -45,6 +45,26 @@ TrainingStats TrainPerceptron(Perceptron20& p, const Dataset& ds, int maxEpochs,
 
     const double scale = 1.0 / std::sqrt(20.0);
 
+    if (ofs) {
+        // Compute the out for the whole dataset and compute the initial error count
+        int correct = 0;
+        for (int i = 0; i < ds.getSize(); ++i) {
+            const auto& el = ds[i];
+            Vector S20 = Vector::concat(el.top.toVector(), el.bottom.toVector());
+            const int out = p.eval(S20);
+            if (out == el.label) {
+                ++correct;
+            }
+        }
+        // The print should match the one in the epoch loop below
+        int total = ds.getSize();
+        int residualErrors = total - correct;
+        ofs << 0 << ' ' << residualErrors;
+        const auto weightsSnapshot = p.weights();
+        for (int j = 0; j < 20; ++j) ofs << ' ' << weightsSnapshot[j];
+        ofs << '\n';
+    }
+
     for (int epoch = 0; epoch < maxEpochs; ++epoch) {
         stats.epochsRun = epoch + 1;
         int errors = 0;
@@ -62,7 +82,6 @@ TrainingStats TrainPerceptron(Perceptron20& p, const Dataset& ds, int maxEpochs,
 
         stats.lastEpochErrors = errors;
 
-        // Write weights and errors to file if requested
         if (ofs) {
             const bool matchesInterval = (log_every > 0) && (epoch % log_every == 0);
             const bool shouldLog = (fileLogMode == FileLogMode::EveryEpoch) ||
@@ -76,9 +95,8 @@ TrainingStats TrainPerceptron(Perceptron20& p, const Dataset& ds, int maxEpochs,
             }
         }
 
-        // Console logging controlled by log_every (0 = none)
         if (log_every > 0 && (epoch % log_every == 0)) {
-            std::cout << "Epoch " << epoch << ": errors=" << errors << '\n';
+            std::cout << "Epoch " << epoch+1 << ": errors=" << errors << '\n';
         }
 
         if (errors == 0) break;
