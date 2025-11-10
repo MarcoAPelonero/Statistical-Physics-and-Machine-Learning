@@ -2,32 +2,81 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 from main import f1, f2, fixed_point_iterate
+from scipy.ndimage import gaussian_filter
 
+def stability_metric(Rs, alpha, f_callable, num_samples=10_000, rng=None):
+    """
+    True fixed-point residual metric:
+        S = |R_last - f(R_last, α)|
 
-# ======================================================
-# --- Core metric and surface computations ---
-# ======================================================
-
-def stability_metric(Rs):
-    """Variance of R in the steady state (smaller = more stable)."""
-    steady = Rs[len(Rs)//2:]
-    return np.var(steady)
+    Smaller S → closer to a self-consistent fixed point → more stable.
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+    R_last = Rs[-1]
+    f_val = f_callable(R_last, alpha, num_samples=num_samples, rng=rng)
+    return abs(R_last - f_val)
 
 
 def stability_surface(f_callable, a_values, alpha_values,
-                      num_iter=40, num_samples=50000, seed=42):
-    """Compute stability variance surface for given f function."""
-    S = np.zeros((len(a_values), len(alpha_values)))
-    for i, a in enumerate(a_values):
-        for j, alpha in enumerate(alpha_values):
-            Rs = fixed_point_iterate(
-                alpha=alpha, R0=0.5, a=a,
-                num_iter=num_iter, f_callable=f_callable,
-                num_samples=num_samples, seed=seed, clip=True
-            )
-            S[i, j] = stability_metric(Rs)
-    return S
+                      num_iter=40, num_samples=50_000,
+                      n_avg=5, seed=42, smooth_sigma=1.0):
+    """
+    Compute an averaged fixed-point residual stability surface.
 
+    Parameters
+    ----------
+    f_callable : callable
+        Function f1 or f2.
+    a_values : array
+        Learning rate grid.
+    alpha_values : array
+        Alpha grid.
+    num_iter : int
+        Fixed-point iterations.
+    num_samples : int
+        Monte Carlo samples per call.
+    n_avg : int
+        Number of independent Monte Carlo runs to average (reduces noise ~ 1/sqrt(n_avg)).
+    seed : int
+        Base random seed; each (a, alpha, run) uses a distinct offset.
+    smooth_sigma : float
+        Gaussian smoothing (in grid cells) applied to the averaged surface.
+
+    Returns
+    -------
+    S_smooth : np.ndarray
+        Smoothed 2D surface of residual |R* - f(R*,α)|.
+    """
+    n_a, n_alpha = len(a_values), len(alpha_values)
+    S_accum = np.zeros((n_a, n_alpha))
+
+    for k in range(n_avg):
+        print(f"  Averaging pass {k+1}/{n_avg}...")
+        S = np.zeros_like(S_accum)
+        for i, a in enumerate(a_values):
+            for j, alpha in enumerate(alpha_values):
+                local_seed = seed + k * 10000 + i * 100 + j
+                Rs = fixed_point_iterate(
+                    alpha=alpha, R0=0.5, a=a,
+                    num_iter=num_iter, f_callable=f_callable,
+                    num_samples=num_samples, seed=local_seed, clip=True
+                )
+                # Compute fixed-point residual at the final R
+                rng = np.random.default_rng(local_seed)
+                R_last = Rs[-1]
+                f_val = f_callable(R_last, alpha, num_samples=num_samples, rng=rng)
+                S[i, j] = abs(R_last - f_val)
+        S_accum += S
+
+    # Average over Monte Carlo runs
+    S_mean = S_accum / n_avg
+
+    # Optional light smoothing to remove high-frequency noise
+    if smooth_sigma > 0.0:
+        S_mean = gaussian_filter(S_mean, sigma=smooth_sigma)
+
+    return S_mean
 
 # ======================================================
 # --- Plotting utilities ---
@@ -35,8 +84,8 @@ def stability_surface(f_callable, a_values, alpha_values,
 
 def plot_stability_surface(a_values, alpha_values, S, title, cmap="Greens_r"):
     """
-    Plot a single stability surface (log10 variance) for one function.
-    Low variance = high stability → bright color (using reversed cmap).
+    Plot a single stability surface (log10 residual) for one function.
+    Low residual = high stability → bright color (reversed colormap).
     """
     A, ALPHA = np.meshgrid(alpha_values, a_values)
     logS = np.log10(S + 1e-12)
@@ -47,11 +96,11 @@ def plot_stability_surface(a_values, alpha_values, S, title, cmap="Greens_r"):
                            cmap=cmap, edgecolor='none', alpha=0.9)
     ax.set_xlabel(r"$\alpha$")
     ax.set_ylabel(r"$a$")
-    ax.set_zlabel(r"$\log_{10} S$")
+    ax.set_zlabel(r"$\log_{10}|R^* - f(R^*,\alpha)|$")
     ax.set_title(title)
 
     cbar = fig.colorbar(surf, shrink=0.6, aspect=10)
-    cbar.set_label("log₁₀ stability variance (low = unstable, high = stable)")
+    cbar.set_label("log₁₀ fixed-point residual (low = stable)")
     plt.tight_layout()
     return fig, ax
 
@@ -60,15 +109,13 @@ def plot_3d_overlap(a_values, alpha_values, S1, S2,
                     title="Normalized 3D overlap: f₁ (green) vs f₂ (purple)"):
     """
     Overlay both normalized stability surfaces in one 3D plot.
-    Higher = more stable.
+    Higher = more stable (smaller residual).
     """
     A, ALPHA = np.meshgrid(alpha_values, a_values)
 
-    # Convert to log space (smaller = more stable)
+    # Convert to log space and invert → higher = more stable
     Z1 = np.log10(S1 + 1e-12)
     Z2 = np.log10(S2 + 1e-12)
-
-    # Invert and normalize → higher = more stable
     Z1n = 1 - (Z1 - np.nanmin(Z1)) / (np.nanmax(Z1) - np.nanmin(Z1) + 1e-12)
     Z2n = 1 - (Z2 - np.nanmin(Z2)) / (np.nanmax(Z2) - np.nanmin(Z2) + 1e-12)
 
@@ -98,7 +145,7 @@ def highlight_sweetzone(alpha_values, a_values, S1, S2,
                         stability_threshold=0.7):
     """
     Plot 2D normalized stability maps with joint 'sweet zone' highlight.
-    The sweet zone is the region where both f₁ and f₂ are simultaneously stable.
+    Sweet zone = both f₁ and f₂ have small residuals (convergent).
     """
     logS1 = np.log10(S1 + 1e-12)
     logS2 = np.log10(S2 + 1e-12)
@@ -133,7 +180,7 @@ def highlight_sweetzone(alpha_values, a_values, S1, S2,
 
     ax.set_xlabel(r"$\alpha$")
     ax.set_ylabel(r"$a$")
-    ax.set_title("Normalized stability overlap with joint 'sweet zone'", fontsize=14)
+    ax.set_title("Normalized fixed-point stability overlap ('sweet zone')", fontsize=14)
     ax.legend(loc='upper right')
 
     fig.colorbar(c1, ax=ax, shrink=0.75, label="f₁ normalized stability (high = good)")
@@ -160,7 +207,7 @@ def exPointStability3D():
     num_samples = 5000
     seed = 42
 
-    print("Computing stability surfaces...")
+    print("Computing fixed-point stability surfaces...")
     S1 = stability_surface(f1, a_values, alpha_values,
                            num_iter=num_iter, num_samples=num_samples, seed=seed)
     S2 = stability_surface(f2, a_values, alpha_values,
@@ -168,12 +215,10 @@ def exPointStability3D():
 
     print("Plotting results...")
     highlight_sweetzone(alpha_values, a_values, S1, S2, stability_threshold=0.7)
-
     plot_stability_surface(a_values, alpha_values, S1,
-                           title=r"Stability surface (log) for $f_1(R,\alpha)$", cmap="Greens_r")
+                           title=r"Fixed-point residual surface for $f_1(R,\alpha)$", cmap="Greens_r")
     plot_stability_surface(a_values, alpha_values, S2,
-                           title=r"Stability surface (log) for $f_2(R,\alpha)$", cmap="Purples_r")
-
+                           title=r"Fixed-point residual surface for $f_2(R,\alpha)$", cmap="Purples_r")
     plot_3d_overlap(a_values, alpha_values, S1, S2)
 
 

@@ -417,16 +417,16 @@ def exPointFive():
     eps_parametric = epsilon_from_R(R_parametric)
     
     # Load experimental data from EX4
-    ex4_path = os.path.join(os.path.dirname(__file__), '..', 'EX4', 'extra_point_four.csv')
+    ex4_path = os.path.join(os.path.dirname(__file__), '..', 'EX4', 'dataset_annealed.csv')
     try:
         df = pd.read_csv(ex4_path)
         # Keep only rows with 20 bits as requested
-        df = df[df['bits'] == 80].copy()
+        df = df[df['bits'] == 10].copy()
         if df.empty:
             raise ValueError("No rows with bits == 20 found in dataset.csv")
         # Convert accuracy to epsilon: epsilon = (100 - accuracy) / 100
         # alpha = dataset_size / bits
-        alpha_exp = df['dataset_size'] / (df['bits'])
+        alpha_exp = df['dataset_size'] / (df['bits'] * 2 )
         eps_exp = (100.0 - df['mean_accuracy']) / 100.0
         eps_std_exp = df['std_accuracy'] / 100.0  # convert std to same scale
         
