@@ -17,7 +17,19 @@ df2 = pd.read_csv(path_two)
 df3 = pd.read_csv(path_three)
 
 # Parameters (must match how exPointThree computed alpha)
-bits = 10  # keep in sync with C++ code
+bits = 30  # keep in sync with C++ code (N = 2 * bits = 60)
+N = 2 * bits
+
+# Define the exact alpha values used in the C++ simulation
+alpha_values = []
+alpha_values.extend(np.arange(0.5, 5.5, 0.5))
+alpha_values.extend(np.arange(6.0, 16.0, 1.0))
+alpha_values.extend(np.arange(20.0, 55.0, 5.0))
+
+# Create a mapping from train_size back to the original alpha
+# This avoids floating point inaccuracies from recalculating
+p_values = [int(a * N) for a in alpha_values]
+alpha_map = dict(zip(p_values, alpha_values))
 
 # Aggregate exPointTwo across trials: group by train_size
 grouped = df2.groupby('train_size').agg({
@@ -27,8 +39,10 @@ grouped = df2.groupby('train_size').agg({
 # flatten columns
 grouped.columns = ['train_size', 'train_err_mean', 'train_err_std', 'test_err_mean', 'test_err_std']
 
-# compute alpha for grouped data
-grouped['alpha'] = grouped['train_size'] / (2.0 * bits)
+# Map train_size to the original alpha values
+grouped['alpha'] = grouped['train_size'].map(alpha_map)
+# remove any rows that didn't map (if any)
+grouped.dropna(subset=['alpha'], inplace=True)
 # sort by alpha
 grouped = grouped.sort_values('alpha')
 

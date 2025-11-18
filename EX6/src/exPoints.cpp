@@ -33,8 +33,8 @@ void exPointOne() {
     std::cout << "Single epoch training with Hebbian rule\n\n";
     
     // Define constants
-    constexpr int N = 20;  // Perceptron size (2 * bits per scalar)
-    constexpr int bits = 10;  // Bits per scalar
+    constexpr int N = 60;  // Perceptron size (2 * bits per scalar)
+    constexpr int bits = 30;  // Bits per scalar
     const int P = 100;  // Number of training examples
     
     // Generate training dataset with random seed
@@ -84,12 +84,31 @@ void exPointOne() {
 
 void exPointTwo() {
     std::cout << "Executing Exercise Point Two\n";
-    const int bits = 10;
+    const int bits = 30;
+    const int N = 60;  // 2 * bits
     const int P_test = 1000;
     const int numTrials = 1000;
-    std::array<int, 20> datasetSize;
+    std::vector<int> datasetSize;
+    std::vector<double> alphaValues;
 
-    for (int i = 0; i < 20; ++i) datasetSize[i] = (i + 1) * 50;
+    // alpha = P/N, so P = alpha * N
+    // Denser sampling for smaller alpha values
+    // 0.5 to 5.0 in steps of 0.5 (10 points)
+    for (double a = 0.5; a <= 5.0; a += 0.5) {
+        alphaValues.push_back(a);
+    }
+    // 6 to 15 in steps of 1.0 (10 points)
+    for (double a = 6.0; a <= 15.0; a += 1.0) {
+        alphaValues.push_back(a);
+    }
+    // 20 to 50 in steps of 5.0 (7 points)
+    for (double a = 20.0; a <= 50.0; a += 5.0) {
+        alphaValues.push_back(a);
+    }
+    
+    for (double alpha : alphaValues) {
+        datasetSize.push_back(static_cast<int>(alpha * N));
+    }
 
     // Use a single RNG to produce varied seeds
     std::mt19937 seedGen(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
@@ -110,12 +129,12 @@ void exPointTwo() {
     ofs << "trial,train_size,train_errors,train_error_rate,test_errors,test_error_rate\n";
 
     for (int trial = 0; trial < numTrials; ++trial) {
+        // Train perceptron (single epoch)
+        Perceptron<60, LearningRules::HebbianRule> perceptron(seedGen());
         for (auto P : datasetSize) {
             // Generate training data with a fresh seed
             Dataset trainingData = generateDataset(P, seedGen(), bits);
 
-            // Train perceptron (single epoch)
-            Perceptron<20, LearningRules::HebbianRule> perceptron;
             perceptron.resetWeights();
             TrainingStats stats = TrainPerceptronOne(perceptron, trainingData);
 
@@ -143,12 +162,26 @@ void exPointTwo() {
 
 void exPointThree() {
     std::cout << "Executing Exercise Point Three\n";
-    const int bits = 10;
-    std::array<int, 20> datasetSize;
-    std::array<double, 20> alphaValues;
-    for (int i = 0; i < 20; ++i) datasetSize[i] = (i + 1) * 50;
-    for (int i = 0; i < 20; ++i) {
-        alphaValues[i] = static_cast<double>(datasetSize[i]) / (2.0 * bits);
+    const int N = 60;  // 2 * bits
+    std::vector<int> datasetSize;
+    std::vector<double> alphaValues;
+    
+    // alpha from 0.5 to 50, denser sampling for smaller values
+    // 0.5 to 5.0 in steps of 0.5 (10 points)
+    for (double a = 0.5; a <= 5.0; a += 0.5) {
+        alphaValues.push_back(a);
+    }
+    // 6 to 15 in steps of 1.0 (10 points)
+    for (double a = 6.0; a <= 15.0; a += 1.0) {
+        alphaValues.push_back(a);
+    }
+    // 20 to 50 in steps of 5.0 (7 points)
+    for (double a = 20.0; a <= 50.0; a += 5.0) {
+        alphaValues.push_back(a);
+    }
+    
+    for (double alpha : alphaValues) {
+        datasetSize.push_back(static_cast<int>(alpha * N));
     }
 
     // Prepare output directory and CSV file
@@ -161,9 +194,7 @@ void exPointThree() {
         return;
     }
     ofs << "alpha,epsilon_train,epsilon_theory\n";
-    for (int i = 0; i < 20; ++i) {
-        double alpha = alphaValues[i];
-
+    for (double alpha : alphaValues) {
         double eTrain = Integration::epsilon_train(alpha);
         double eTheory = Integration::epsilon_theory(alpha);
 

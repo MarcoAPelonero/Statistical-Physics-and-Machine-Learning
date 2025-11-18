@@ -3,87 +3,90 @@
 
 #include <cmath>
 #include <functional>
-#include <limits>
 #include <cassert>
 
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
+#endif
 
 namespace Integration {
 
-// ============================================================================
-// Generic numerical integration (adaptive Simpson)
-// ============================================================================
+// ================================================================
+// Simpson rule (fixed grid, robust, deterministic)
+// ================================================================
 namespace detail {
 
-inline double simpson(const std::function<double(double)>& f,
-                      double a, double b) {
-    const double c = 0.5 * (a + b);
-    return (b - a) * (f(a) + 4 * f(c) + f(b)) / 6.0;
-}
+inline double simpsonFixedGrid(const std::function<double(double)>& f,
+                               double a, double b, int n = 2000)
+{
+    if (n % 2 != 0) n++;
+    const double h = (b - a) / n;
 
-inline double adaptiveSimpson(const std::function<double(double)>& f,
-                              double a, double b,
-                              double eps,
-                              double whole) {
-    const double c = 0.5 * (a + b);
-    const double left  = simpson(f, a, c);
-    const double right = simpson(f, c, b);
-    const double diff = left + right - whole;
+    double sum = f(a) + f(b);
 
-    if (std::fabs(diff) < 15.0 * eps) {
-        return left + right + diff / 15.0;
-    }
-    return adaptiveSimpson(f, a, c, eps * 0.5, left)
-         + adaptiveSimpson(f, c, b, eps * 0.5, right);
+    for (int i = 1; i < n; i += 2)
+        sum += 4.0 * f(a + i * h);
+
+    for (int i = 2; i < n; i += 2)
+        sum += 2.0 * f(a + i * h);
+
+    return (h / 3.0) * sum;
 }
 
 } // namespace detail
 
-// Public interface
+
+// Public interface – wrapper
 inline double integrate(const std::function<double(double)>& f,
-                        double a, double b,
-                        double eps = 1e-8) {
-    double whole = detail::simpson(f, a, b);
-    return detail::adaptiveSimpson(f, a, b, eps, whole);
+                        double a, double b)
+{
+    return detail::simpsonFixedGrid(f, a, b, 2000);
 }
 
-// ============================================================================
-// Gaussian measure helpers: Dx = Normal(0,1) measure
-// ============================================================================
+
+// ================================================================
+// Gaussian measure Dx = Normal(0,1)
+// ================================================================
+
 inline double gaussianMeasure(double x) {
     return std::exp(-0.5 * x * x) / std::sqrt(2.0 * M_PI);
 }
 
-inline double H_function(double u, double eps = 1e-8) {
-    // H(u) = ∫_u^∞ Dy
-    if (u < -10) return 1.0;   // practically entire mass
-    if (u > 10)  return 0.0;   // negligible tail
-
-    return integrate(gaussianMeasure, u, 10.0, eps);
+inline double H_function(double u) {
+    // H(u) = ∫_u^∞ Dy = 0.5 * erfc(u/sqrt(2))
+    return 0.5 * std::erfc(u / std::sqrt(2.0));
 }
 
-// ============================================================================
-// Specific analytic functions
-// ============================================================================
 
-// epsilon(α) = 1/pi arccos( sqrt(2α/(2α+π)) )
+// ================================================================
+// Theoretical prediction epsilon(α)
+// ================================================================
+
 inline double epsilon_theory(double alpha) {
     assert(alpha > 0.0);
-    double arg = std::sqrt((2 * alpha) / (2 * alpha + M_PI));
+    double arg = std::sqrt((2.0 * alpha) / (2.0 * alpha + M_PI));
     return std::acos(arg) / M_PI;
 }
 
-// ε_train(α) = 2 ∫_0^∞ Dx H( 1/√α + sqrt(2α/π) x )
-inline double epsilon_train(double alpha, double eps = 1e-8) {
+
+// ================================================================
+// Training error from the formula
+// ε_train(α) = 2 ∫_0^∞ Dx H(1/√α + √(2α/π) x)
+// ================================================================
+
+inline double epsilon_train(double alpha)
+{
     assert(alpha > 0.0);
-    double a = 1.0 / std::sqrt(alpha);
-    double b = std::sqrt(2.0 * alpha / M_PI);
+
+    const double a = 1.0 / std::sqrt(alpha);
+    const double b = std::sqrt(2.0 * alpha / M_PI);
 
     auto integrand = [&](double x) {
-        return gaussianMeasure(x) * H_function(a + b * x, eps);
+        return gaussianMeasure(x) * H_function(a + b * x);
     };
 
-    return 2.0 * integrate(integrand, 0.0, 10.0, eps);
+    // Gaussian tails vanish after ~6σ
+    return 2.0 * integrate(integrand, 0.0, 8.0);
 }
 
 } // namespace Integration

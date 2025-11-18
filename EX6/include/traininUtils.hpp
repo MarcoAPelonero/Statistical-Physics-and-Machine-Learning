@@ -7,6 +7,7 @@
 #include <random>
 #include <string>
 #include <optional>
+#include <type_traits>
 
 
 struct DatasetElement {
@@ -211,13 +212,10 @@ TrainingStats TrainPerceptronOne(Perceptron<N, UpdateRule>& p, const Dataset& ds
     stats.epochsRun = 1;
     const double scale = 1.0 / std::sqrt(static_cast<double>(N));
 
-    // 1) Do the Hebb pass WITHOUT counting errors
     for (int i = 0; i < ds.getSize(); ++i) {
         const auto& el = ds[i];
-        if (el.label == 0) continue; // optional, skip ambiguous cases
-
         Vector<int> S = Vector<int>::concat(el.top.toVector(), el.bottom.toVector());
-        p.applyUpdate(S, el.label, scale);
+        p.applyUpdate(S, el.label, scale);  // then update
     }
 
     // 2) Now evaluate training error AFTER learning
