@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cassert>
 #include <iostream>
+#include <type_traits>
 #include "vector.hpp"
 #include "learningRules.hpp"
 
@@ -20,12 +21,18 @@ public:
         rng_ = std::mt19937(seed);
         std::normal_distribution<double> dist(0.0, 1.0);
         for (double &w : J_) w = dist(rng_);
+        if constexpr (std::is_constructible<UpdateRule, unsigned>::value) {
+            updateRule_ = UpdateRule(seed);
+        }
     }
 
     Perceptron(const unsigned seed) {
         rng_ = std::mt19937(seed);
         std::normal_distribution<double> dist(0.0, 1.0);
         for (double &w : J_) w = dist(rng_);
+        if constexpr (std::is_constructible<UpdateRule, unsigned>::value) {
+            updateRule_ = UpdateRule(seed);
+        }
     }
 
     // Build a perfect teacher according to the specification:

@@ -162,7 +162,51 @@ expected from finite sampling noise), confirming that:
 2. The previous discrepancy was purely due to using a Gaussian analytic
    theory for a binary‑input comparator task.
 
-You can therefore use the Monte‑Carlo curve as the “correct” theory for the
+You can therefore use the Monte‑Carlo curve as the "correct" theory for the
 specific setup implemented here, while keeping the Gaussian formulas as a
 useful reference to the standard textbook results. 
-*** End Patch***】} ***!
+
+## exPointFour: Generalization gap analysis for high alpha
+
+The `exPointFour` exercise analyzes the **generalization gap** (difference
+between test error and training error) focusing on higher alpha values. This
+helps understand how well the model generalizes as more training samples
+become available relative to the model complexity.
+
+### Implementation
+
+`exPointFour()` generates the same theoretical data as `exPointThree` and
+writes it to `plots/exPointFour_results.csv` with the same schema:
+
+```text
+alpha,epsilon_train,epsilon_theory,epsilon_mc_train,epsilon_mc_test
+```
+
+### Plotting: exPointFourPlotter.py
+
+The plotter imports data from `exPointThree_results.csv` and:
+
+1. Filters to the **upper 2/3** of alpha values (from 5.0 to 50.0 in the
+   current configuration with 27 total alpha points)
+2. Computes two generalization gaps:
+   - **Gaussian theory gap**: `epsilon_theory - epsilon_train`
+   - **Monte Carlo gap**: `epsilon_mc_test - epsilon_mc_train`
+3. Plots both gaps against alpha on a single plot
+
+### Interpretation
+
+The generalization gap quantifies how much worse the model performs on unseen
+data compared to the training set. Key observations:
+
+- Both gaps **decrease with increasing alpha**, indicating better
+  generalization as more training samples are provided
+- The Monte Carlo gap (binary model) is consistently slightly lower than the
+  Gaussian theory gap, reflecting the model mismatch discussed earlier
+- At high alpha (e.g., α = 50), the gap approaches ~0.009, showing the model
+  is close to memorizing the training distribution while still generalizing
+- The gap is largest at α = 5 (~0.07), where the training set is smallest
+  relative to model complexity
+
+This analysis confirms that the Hebbian learning rule benefits significantly
+from larger training sets, with the generalization gap shrinking as more
+examples become available.

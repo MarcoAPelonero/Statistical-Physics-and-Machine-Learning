@@ -19,12 +19,18 @@ int main(int argc, char** argv) {
             exPointOne();
             exPointTwo();
             exPointThree();
+            exPointFour();
+            exPointFive();
+            exPointSix();
             break;
         case 2:
             if (std::string(argv[1]) == "default") {
                 exPointOne();
                 exPointTwo();
                 exPointThree();
+                exPointFour();
+                exPointFive();
+                exPointSix();
             } else if (std::string(argv[1]) == "comparison") {
                 comparison();
             } else {
@@ -44,6 +50,15 @@ int main(int argc, char** argv) {
                         break;
                     case 3:
                         exPointThree();
+                        break;
+                    case 4:
+                        exPointFour();
+                        break;
+                    case 5:
+                        exPointFive();
+                        break;
+                    case 6:
+                        exPointSix();
                         break;
                     default:
                         std::cerr << "Invalid exercise number. Please choose between 1 and 13.\n";

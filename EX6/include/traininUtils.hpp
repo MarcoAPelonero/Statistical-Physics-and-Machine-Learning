@@ -162,7 +162,7 @@ TrainingStats TrainPerceptron(Perceptron<N, UpdateRule>& p, const Dataset& ds, i
             for (int j = 0; j < N; ++j) ofs << ' ' << weightsSnapshot[j];
             ofs << '\n';
         }
-        std::cout << "Epoch 0: errors=" << residualErrors << '\n';
+        // std::cout << "Epoch 0: errors=" << residualErrors << '\n';
     }
 
     for (int epoch = 0; epoch < maxEpochs; ++epoch) {
@@ -193,10 +193,6 @@ TrainingStats TrainPerceptron(Perceptron<N, UpdateRule>& p, const Dataset& ds, i
                 for (int j = 0; j < N; ++j) ofs << ' ' << weightsSnapshot[j];
                 ofs << '\n';
             }
-        }
-
-        if (log_every > 0 && (epoch % log_every == 0) && epoch != 0) {
-            std::cout << "Epoch " << epoch+1 << ": errors=" << errors << '\n';
         }
 
         if (errors == 0) break;
