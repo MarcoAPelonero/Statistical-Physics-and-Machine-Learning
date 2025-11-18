@@ -57,7 +57,9 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 ax1.errorbar(grouped['alpha'], grouped['train_err_mean'],
              yerr=grouped['train_err_std'], marker='o', linestyle='-', capsize=4,
              label='Empirical training (mean ± std)', color='tab:blue')
-ax1.plot(df3_sorted['alpha'], df3_sorted['epsilon_train'], '-', color='tab:green', lw=2, label='Theory: $\\epsilon_{train}$')
+ax1.plot(df3_sorted['alpha'], df3_sorted['epsilon_train'], '-', color='tab:green', lw=2, label='Theory (Gaussian): $\\epsilon_{train}$')
+if 'epsilon_mc_train' in df3_sorted.columns:
+    ax1.plot(df3_sorted['alpha'], df3_sorted['epsilon_mc_train'], '--', color='tab:purple', lw=2, label='Monte Carlo (binary): $\\epsilon^{MC}_{train}$')
 ax1.set_xlabel('Alpha (P / (2*bits))', fontsize=12)
 ax1.set_ylabel('Training error', fontsize=12)
 ax1.set_title('Training error: empirical vs theory', fontsize=13)
@@ -68,7 +70,9 @@ ax1.legend(fontsize=10)
 ax2.errorbar(grouped['alpha'], grouped['test_err_mean'],
              yerr=grouped['test_err_std'], marker='s', linestyle='-', capsize=4,
              label='Empirical test (mean ± std)', color='tab:red')
-ax2.plot(df3_sorted['alpha'], df3_sorted['epsilon_theory'], '-', color='tab:orange', lw=2, label='Theory: $\\epsilon_{theory}$')
+ax2.plot(df3_sorted['alpha'], df3_sorted['epsilon_theory'], '-', color='tab:orange', lw=2, label='Theory (Gaussian): $\\epsilon_{theory}$')
+if 'epsilon_mc_test' in df3_sorted.columns:
+    ax2.plot(df3_sorted['alpha'], df3_sorted['epsilon_mc_test'], '--', color='tab:purple', lw=2, label='Monte Carlo (binary): $\\epsilon^{MC}_{test}$')
 ax2.set_xlabel('Alpha (P / (2*bits))', fontsize=12)
 ax2.set_ylabel('Generalization error', fontsize=12)
 ax2.set_title('Generalization error: empirical vs theory', fontsize=13)

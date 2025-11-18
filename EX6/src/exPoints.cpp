@@ -162,7 +162,11 @@ void exPointTwo() {
 
 void exPointThree() {
     std::cout << "Executing Exercise Point Three\n";
-    const int N = 60;  // 2 * bits
+    const int bits = 30;
+    const int N = 2 * bits;
+    const int mcTrials = 1500;
+    const int mcTestSamples = 2000;
+    const unsigned mcSeed = 12345;
     std::vector<int> datasetSize;
     std::vector<double> alphaValues;
     
@@ -193,12 +197,13 @@ void exPointThree() {
         std::cerr << "Failed to open output file: " << outPath.string() << "\n";
         return;
     }
-    ofs << "alpha,epsilon_train,epsilon_theory\n";
+    ofs << "alpha,epsilon_train,epsilon_theory,epsilon_mc_train,epsilon_mc_test\n";
     for (double alpha : alphaValues) {
         double eTrain = Integration::epsilon_train(alpha);
         double eTheory = Integration::epsilon_theory(alpha);
+        auto mc = Integration::epsilon_mc(alpha, bits, mcTrials, mcTestSamples, mcSeed + static_cast<unsigned>(alpha * 1000));
 
-        ofs << alpha << "," << eTrain << "," << eTheory << "\n";
+        ofs << alpha << "," << eTrain << "," << eTheory << "," << mc.eps_train << "," << mc.eps_test << "\n";
     }
     ofs.close();
     std::cout << "Results written to " << outPath.string() << "\n";

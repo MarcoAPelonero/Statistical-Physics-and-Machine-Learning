@@ -4,6 +4,10 @@
 #include <cmath>
 #include <functional>
 #include <cassert>
+#include <vector>
+#include <random>
+#include <cstdint>
+#include <algorithm>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -87,6 +91,112 @@ inline double epsilon_train(double alpha)
 
     // Gaussian tails vanish after ~6σ
     return 2.0 * integrate(integrand, 0.0, 8.0);
+}
+
+// ================================================================
+// Monte Carlo "theory" for the binary-input comparator task
+// ================================================================
+struct MonteCarloResult {
+    double eps_train;
+    double eps_test;
+};
+
+inline MonteCarloResult epsilon_mc(double alpha,
+                                   int bits = 30,
+                                   int trials = 1000,
+                                   int testSamples = 2000,
+                                   unsigned seed = 12345)
+{
+    assert(alpha > 0.0);
+    assert(bits > 0);
+    assert(trials > 0);
+    assert(testSamples > 0);
+
+    const int N = 2 * bits;
+    const int P = std::max(1, static_cast<int>(std::round(alpha * N)));
+    const double scale = 1.0 / std::sqrt(static_cast<double>(N));
+
+    std::mt19937 rng(seed);
+    std::uniform_int_distribution<int> bitDist(0, 1);
+
+    // Comparator teacher weights match Perceptron::perfectTeacher
+    std::vector<double> w_star(N);
+    for (int i = 0; i < bits; ++i) {
+        const double val = static_cast<double>(1u << (bits - 1 - i));
+        w_star[i] = val;
+        w_star[bits + i] = -val;
+    }
+
+    double trainErrSum = 0.0;
+    double testErrSum = 0.0;
+
+    std::vector<int8_t> patternBuffer; // reused to avoid reallocations
+    patternBuffer.reserve(static_cast<size_t>(P) * static_cast<size_t>(N));
+    std::vector<int8_t> labels;
+    labels.reserve(P);
+
+    for (int trial = 0; trial < trials; ++trial) {
+        patternBuffer.clear();
+        labels.clear();
+
+        // Hebbian-trained weights (start from zero each trial)
+        std::vector<double> w(N, 0.0);
+
+        // Generate training set and accumulate Hebbian update
+        for (int p = 0; p < P; ++p) {
+            double dotTeacher = 0.0;
+            for (int j = 0; j < N; ++j) {
+                const int s = bitDist(rng) ? 1 : -1;
+                patternBuffer.push_back(static_cast<int8_t>(s));
+                dotTeacher += w_star[j] * static_cast<double>(s);
+            }
+            int lbl = (dotTeacher > 0.0) ? +1 : -1; // tie is negligible; use +1 if ever 0
+            labels.push_back(static_cast<int8_t>(lbl));
+
+            const double coeff = scale * static_cast<double>(lbl);
+            const int offset = p * N;
+            for (int j = 0; j < N; ++j) {
+                w[j] += coeff * static_cast<double>(patternBuffer[offset + j]);
+            }
+        }
+
+        // Training error on the same set
+        int trainErrors = 0;
+        for (int p = 0; p < P; ++p) {
+            double dot = 0.0;
+            const int offset = p * N;
+            for (int j = 0; j < N; ++j) {
+                dot += w[j] * static_cast<double>(patternBuffer[offset + j]);
+            }
+            const int pred = (dot > 0.0) ? +1 : -1;
+            if (pred != labels[p]) ++trainErrors;
+        }
+        trainErrSum += static_cast<double>(trainErrors) / static_cast<double>(P);
+
+        // Generalization error on fresh random patterns
+        int testErrors = 0;
+        std::vector<int> testPattern(N);
+        for (int t = 0; t < testSamples; ++t) {
+            double dotTeacher = 0.0;
+            for (int j = 0; j < N; ++j) {
+                const int s = bitDist(rng) ? 1 : -1;
+                testPattern[j] = s;
+                dotTeacher += w_star[j] * static_cast<double>(s);
+            }
+            const int lbl = (dotTeacher > 0.0) ? +1 : -1;
+
+            double dot = 0.0;
+            for (int j = 0; j < N; ++j) dot += w[j] * static_cast<double>(testPattern[j]);
+            const int pred = (dot > 0.0) ? +1 : -1;
+            if (pred != lbl) ++testErrors;
+        }
+        testErrSum += static_cast<double>(testErrors) / static_cast<double>(testSamples);
+    }
+
+    MonteCarloResult res;
+    res.eps_train = trainErrSum / static_cast<double>(trials);
+    res.eps_test  = testErrSum / static_cast<double>(trials);
+    return res;
 }
 
 } // namespace Integration
