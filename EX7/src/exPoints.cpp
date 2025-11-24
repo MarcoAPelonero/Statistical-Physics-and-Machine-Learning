@@ -237,7 +237,39 @@ void exPointFive() {
 
 void exPointSix() {
     std::cout << "Executing Exercise Point Six\n";
+    std::cout << "Define a dataset and a perceptron, train using the \n";
+    std::cout << "Bayes rule and print the weights" << std::endl;
     
+    const int bits = 10;
+    const int N = 2 * bits;
+    const int P = 1000;  // Training set size
+
+    // Generate seed with clock time
+    unsigned seed = static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count());
+    Dataset dataset = generateDataset(P, seed, bits);
+
+    // Create perceptron
+    Perceptron<N, InstantLearningRules::BayesRule> perceptron(seed);
+    
+    // Train using pseudoinverse rule
+    InstantLearningRules::BayesRule rule;
+    perceptron.applyInstantRule(rule, dataset);  // Sets weights in one shot
+
+    // Print weights
+    const auto finalWeights = perceptron.weights();
+    std::cout << "Trained weights:\n";
+    for (int i = 0; i < N; ++i) {
+        std::cout << "w[" << i << "] = " << finalWeights[i] << '\n';
+    }
+    // Print out training error
+    int trainingErrors = 0;
+    for (int i = 0; i < dataset.getSize(); ++i) {
+        const auto& el = dataset[i];
+        Vector<int> S = Vector<int>::concat(el.top.toVector(), el.bottom.toVector());
+        const int out = perceptron.eval(S);
+        if (out != el.label) ++trainingErrors;
+    }
+    std::cout << "Training errors: " << trainingErrors << " out of " << dataset.getSize() << '\n';  
 }
 
 void extraPointOne() {

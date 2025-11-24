@@ -132,7 +132,7 @@ namespace InstantLearningRules {
                         int maxIter = 100000,
                         double gamma = 0.05)
     {
-        auto& weights = perceptron.getWeights();     
+        auto weights = perceptron.getWeights();     
         const int P = dataset.getSize();
         const int N = weights.getSize();
 
@@ -334,6 +334,49 @@ namespace InstantLearningRules {
             }
             // Apply Adaline correction to refine weights
             AdalineCorrection(perceptron, dataset, tol);
+        }
+    };
+
+    struct BayesRule {
+        int numPerceptrons;
+        double ridgeLambda;
+
+        BayesRule(int numPerceptrons_ = 10, double ridgeLambda_ = 0.001) : numPerceptrons(numPerceptrons_), ridgeLambda(ridgeLambda_) {}
+
+
+        template <typename PerceptronType, typename DatasetType>
+        void operator()(PerceptronType& perceptron, const DatasetType& dataset) const {
+            // Define a population of perceptrons
+            std::vector<PerceptronType> perceptrons;
+            for (int p = 0; p < numPerceptrons; ++p) {
+                PerceptronType pc(perceptron); // Copy constructor
+                pc.resetWeights(0.0);
+                perceptrons.push_back(pc);
+            }
+            // Train each perceptron using Ridge Regression
+            RidgeRegressionRule ridgeRule(ridgeLambda);
+            for (auto& pc : perceptrons) {
+                ridgeRule(pc, dataset);
+            }
+            // Average weights over all perceptrons
+            auto weights = perceptron.getWeights();
+            int N = weights.getSize();
+            std::vector<double> avgWeights(N, 0.0);
+            
+            for (const auto& pc : perceptrons) {
+                const auto& pcWeightsArray = pc.weights();
+                for (int i = 0; i < N; ++i) {
+                    avgWeights[i] += pcWeightsArray[i];
+                }
+            }
+            
+            // Set the averaged weights back
+            const auto& templateWeights = perceptrons[0].weights();
+            auto finalWeights = templateWeights; // Copy to get proper type
+            for (int i = 0; i < N; ++i) {
+                finalWeights[i] = avgWeights[i] / static_cast<double>(numPerceptrons);
+            }
+            perceptron.setWeights(finalWeights);
         }
     };
 } // namespace InstantLearningRules
