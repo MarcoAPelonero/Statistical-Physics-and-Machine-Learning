@@ -2,7 +2,8 @@
 #define TRAINING_UTILS_HPP
 
 #include "vector.hpp"
-#include "perceptron.hpp"
+#include <chrono>
+#include <cassert>
 #include <random>
 #include <string>
 #include <optional>
@@ -10,6 +11,15 @@
 #include <fstream>
 #include <iostream>
 
+// Forward-declare Perceptron here (global scope) to avoid circular includes
+template <int N, typename UpdateRule>
+class Perceptron;
+
+// Forward-declare Dataset for the generateDataset prototype
+class Dataset;
+
+// Declaration of generateDataset (defined in src/trainingUtils.cpp)
+Dataset generateDataset(int P, std::optional<unsigned> seed, int bits);
 
 struct DatasetElement {
     Scalar top;
@@ -74,15 +84,29 @@ public:
         data_[size_++] = {top, bottom, label};
     }
 
+    // friend declaration — do not specify default arguments here
+    friend Dataset generateDataset(int P, std::optional<unsigned> seed, int bits);
+
     int getSize() const { return size_; }
     const DatasetElement& operator[](int idx) const {
         assert(0 <= idx && idx < size_);
         return data_[idx];
     }
+
     DatasetElement& operator[](int idx) {
         assert(0 <= idx && idx < size_);
         return data_[idx];
     }
+
+    void regen() {
+        // This method regenerates the dataset from scratch using the clock time as seed, keeping the same size and everything but regenerating all the data with the generateDataset function
+        int P = size_;
+        unsigned rawSeed = static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count() & 0xFFFFFFFFu);
+        std::optional<unsigned> seedOpt = rawSeed;
+
+        *this = generateDataset(P, seedOpt, data_[0].top.getSize());
+    }
+
 private:
     int size_;
     int capacity_;
@@ -100,12 +124,7 @@ private:
     }
 };
 
-// Generate a dataset of P examples. Each example is a pair of Scalars (top,bottom)
-// together with the correct label: +1 if top>bottom, -1 if top<bottom, 0 if equal.
-// The generator uses an optional seed for reproducibility.
-// requires: #include <optional> (add to top of this header)
-// bits: number of bits per Scalar (default 10)
-Dataset generateDataset(int P, std::optional<unsigned> seed = std::nullopt, int bits = 10);
+
 
 struct TrainingStats {
     int epochsRun = 0;
@@ -217,7 +236,7 @@ TrainingStats TrainPerceptronOne(Perceptron<N, UpdateRule>& p, const Dataset& ds
 
     stats.lastEpochErrors = errors;
     return stats;
-}
+};
 
 
 #endif // TRAINING_UTILS_HPP

@@ -118,8 +118,8 @@ public:
     }
 
     // Apply instant learning rule that computes weights from entire dataset
-    template <typename InstantRule, typename DatasetType>
-    void applyInstantRule(const InstantRule& rule, const DatasetType& dataset) {
+    template <typename InstantRule>
+    void applyInstantRule(InstantRule& rule, Dataset& dataset) {
         rule(*this, dataset);
     }
 

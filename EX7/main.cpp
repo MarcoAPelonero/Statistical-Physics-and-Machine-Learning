@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
             exPointFour();
             exPointFive();
             exPointSix();
+            exPointSeven();
             break;
         case 2:
             if (std::string(argv[1]) == "default") {
@@ -31,6 +32,7 @@ int main(int argc, char** argv) {
                 exPointFour();
                 exPointFive();
                 exPointSix();
+                exPointSeven();
             } else if (std::string(argv[1]) == "comparison") {
                 comparison();
             } else {
@@ -59,6 +61,9 @@ int main(int argc, char** argv) {
                         break;
                     case 6:
                         exPointSix();
+                        break;
+                    case 7:
+                        exPointSeven();
                         break;
                     case 10:
                         extraPointOne();

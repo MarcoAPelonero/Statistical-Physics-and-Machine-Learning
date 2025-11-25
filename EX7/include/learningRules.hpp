@@ -2,6 +2,7 @@
 #define LEARNINGRULES_HPP
 
 #include "vector.hpp"
+#include "traininUtils.hpp"
 #include <random>
 #include <cmath>
 #include <vector>
@@ -345,7 +346,7 @@ namespace InstantLearningRules {
 
 
         template <typename PerceptronType, typename DatasetType>
-        void operator()(PerceptronType& perceptron, const DatasetType& dataset) const {
+        void operator()(PerceptronType& perceptron, DatasetType& dataset) {
             // Define a population of perceptrons
             std::vector<PerceptronType> perceptrons;
             for (int p = 0; p < numPerceptrons; ++p) {
@@ -356,6 +357,7 @@ namespace InstantLearningRules {
             // Train each perceptron using Ridge Regression
             RidgeRegressionRule ridgeRule(ridgeLambda);
             for (auto& pc : perceptrons) {
+                dataset.regen(); // Regenerate dataset for diversity
                 ridgeRule(pc, dataset);
             }
             // Average weights over all perceptrons
