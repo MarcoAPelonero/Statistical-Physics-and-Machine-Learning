@@ -16,8 +16,7 @@ int main() {
 #ifdef _OPENMP
     threads = omp_get_max_threads();
 #endif
-    // Make a graph with 500 nodes, 10 neighbors per node, rewiring prob 0.1, 5 features and 
-    // an array of N different features between a max and a minimum feature dimension
+    // Make a graph with 500 nodes, 5 features and an array of N different features between a max and a minimum feature dimension
 
     // Force remove the folder data/culture_data/ if it exists and create it again
     try {
@@ -33,8 +32,6 @@ int main() {
     }
 
     int num_nodes = 900;
-    int neighbors_per_node = 10;
-    double rewiring_prob = 0.05;
     int num_features = 5;
     int min_feature_dim = 2;
     int max_feature_dim = 100;
@@ -53,9 +50,7 @@ int main() {
 #endif
     for (size_t idx = 0; idx < feature_dim.size(); ++idx) {
         int f_dim = feature_dim[idx];
-        StrogatzGraph g(num_nodes, neighbors_per_node, rewiring_prob,
-                            num_features, f_dim);
-        g.convert_to_2d_lattice();
+        LatticeGraph g(num_nodes, 1, num_features, f_dim);
         std::ofstream outfile;
         outfile.open("data/culture_data/culture_distribution_fdim_" + std::to_string(f_dim) + ".txt");
         for (int it = 0 ; it < num_interactions; ++it) {

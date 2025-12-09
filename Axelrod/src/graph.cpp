@@ -1,102 +1,22 @@
 #include "graph.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <random>
+#include <unordered_map>
 #include <unordered_set>
 
-void StrogatzGraph::generate_graph() {
-    if (neightbors_per_node % 2 != 0) {
-        throw std::runtime_error("neighbors_per_node must be even.");
+Graph::Graph(int n, int f_num, int f_dim)
+    : num_nodes(n), num_features(f_num), feature_dim(f_dim) {
+    if (num_nodes <= 0) {
+        throw std::runtime_error("Number of nodes must be positive.");
     }
-
-    adj_list.assign(num_nodes, {});
-
-    int K = neightbors_per_node;
-
-    // 1) Build directed ring lattice: i -> i+1 ... i+K/2
-    std::vector<std::vector<int>> directed(num_nodes);
-
-    for (int i = 0; i < num_nodes; ++i) {
-        for (int j = 1; j <= K / 2; ++j) {
-            int nbr = (i + j) % num_nodes;
-            directed[i].push_back(nbr);
-        }
-    }
-
-    // 2) Rewire each directed edge with probability rewiring_prob
-    for (int i = 0; i < num_nodes; ++i) {
-        auto& row = directed[i];
-        for (int idx = 0; idx < static_cast<int>(row.size()); ++idx) {
-
-            if (rand_real_0_1() < rewiring_prob) {
-                int new_n;
-
-                while (true) {
-                    new_n = rand_int(0, num_nodes - 1);
-                    if (new_n == i) continue; // avoid self-loop
-
-                    bool exists = false;
-                    for (int x : row) {
-                        if (x == new_n) {
-                            exists = true;
-                            break;
-                        }
-                    }
-                    if (!exists) break;
-                }
-
-                row[idx] = new_n;
-            }
-        }
-    }
-
-    // 3) Make the graph undirected and clean duplicates
-    for (int i = 0; i < num_nodes; ++i) {
-        for (int n : directed[i]) {
-            adj_list[i].push_back(n);
-            adj_list[n].push_back(i);
-        }
-    }
-
-    for (int i = 0; i < num_nodes; ++i) {
-        auto& v = adj_list[i];
-        std::sort(v.begin(), v.end());
-        v.erase(std::unique(v.begin(), v.end()), v.end());
+    if (num_features <= 0 || feature_dim <= 0) {
+        throw std::runtime_error("Feature counts must be positive.");
     }
 }
 
-void StrogatzGraph::convert_to_2d_lattice() {
-    int L = static_cast<int>(std::sqrt(num_nodes));
-    if (L * L != num_nodes) {
-        throw std::runtime_error("convert_to_2d_lattice: num_nodes is not a perfect square.");
-    }
-
-    adj_list.assign(num_nodes, {});
-
-    for (int x = 0; x < L; ++x) {
-        for (int y = 0; y < L; ++y) {
-            int node = x * L + y;
-
-            // Right neighbor
-            int right = x * L + ((y + 1) % L);
-            adj_list[node].push_back(right);
-
-            // Left neighbor
-            int left = x * L + ((y - 1 + L) % L);
-            adj_list[node].push_back(left);
-
-            // Down neighbor
-            int down = ((x + 1) % L) * L + y;
-            adj_list[node].push_back(down);
-
-            // Up neighbor
-            int up = ((x - 1 + L) % L) * L + y;
-            adj_list[node].push_back(up);
-        }
-    }
-}
-
-void StrogatzGraph::generate_node_features() {
+void Graph::generate_node_features() {
     node_features.assign(num_nodes, std::vector<int>(num_features));
 
     for (int i = 0; i < num_nodes; ++i) {
@@ -106,16 +26,11 @@ void StrogatzGraph::generate_node_features() {
     }
 }
 
-const std::vector<std::vector<int>>& StrogatzGraph::get_node_features() const {
-    return node_features;
-}
-
-couple StrogatzGraph::select_nodes_for_interaction() const {
+couple Graph::select_nodes_for_interaction() const {
     if (num_nodes == 0) {
         throw std::runtime_error("Graph has no nodes.");
     }
 
-    // Pick focal node i
     int i = rand_int(0, num_nodes - 1);
     const auto& neighbors = adj_list[i];
 
@@ -123,14 +38,11 @@ couple StrogatzGraph::select_nodes_for_interaction() const {
         throw std::runtime_error("Node has no neighbors to interact with.");
     }
 
-    // Pick random neighbor j of i
     int j = neighbors[rand_int(0, static_cast<int>(neighbors.size()) - 1)];
-
     return {i, j};
 }
 
-void StrogatzGraph::interaction(int node1, int node2) {
-    // node1 and node2 must be valid indices
+void Graph::interaction(int node1, int node2) {
     if (node1 < 0 || node1 >= num_nodes ||
         node2 < 0 || node2 >= num_nodes) {
         throw std::runtime_error("interaction: node index out of range.");
@@ -144,7 +56,6 @@ void StrogatzGraph::interaction(int node1, int node2) {
         throw std::runtime_error("interaction: feature vector size mismatch.");
     }
 
-    // Collect differing feature indices
     std::vector<int> diff;
     diff.reserve(num_features);
     for (int f = 0; f < num_features; ++f) {
@@ -154,20 +65,16 @@ void StrogatzGraph::interaction(int node1, int node2) {
     }
 
     if (diff.empty()) {
-        // Cultures are identical: nothing to copy
         return;
     }
 
-    // Pick one differing feature uniformly at random
     int idx = rand_int(0, static_cast<int>(diff.size()) - 1);
     int fstar = diff[idx];
 
-    // node1 copies node2 on feature fstar
     f1[fstar] = f2[fstar];
 }
 
-void StrogatzGraph::axelrod_interaction() {
-    // 1. select a random pair (i,j) with j neighbor of i
+void Graph::axelrod_interaction() {
     couple nodes = select_nodes_for_interaction();
     int i = nodes.node1;
     int j = nodes.node2;
@@ -180,7 +87,6 @@ void StrogatzGraph::axelrod_interaction() {
         throw std::runtime_error("axelrod_interaction: feature vector size mismatch.");
     }
 
-    // 2. compute similarity (overlap)
     int shared = 0;
     for (int f = 0; f < num_features; ++f) {
         if (fi[f] == fj[f]) {
@@ -189,30 +95,24 @@ void StrogatzGraph::axelrod_interaction() {
     }
 
     if (shared == 0) {
-        // no shared features -> no interaction possible
         return;
     }
 
     double sim = static_cast<double>(shared) / static_cast<double>(num_features);
-
-    // 3. with probability sim, interact
-    double r = rand_real_0_1();
-    if (r >= sim) {
-        return; // no interaction this time
+    if (rand_real_0_1() >= sim) {
+        return;
     }
 
-    // 4. if they interact, i copies one differing feature of j
     interaction(i, j);
 }
 
-void StrogatzGraph::axelrod_step() {
+void Graph::axelrod_step() {
     for (int it = 0; it < num_nodes; ++it) {
         axelrod_interaction();
     }
 }
 
-void StrogatzGraph::measure_culture_histogram() {
-
+void Graph::measure_culture_histogram() {
     std::unordered_map<std::vector<int>, int, VecHash> freq;
     freq.reserve(num_nodes);
 
@@ -228,7 +128,7 @@ void StrogatzGraph::measure_culture_histogram() {
     }
 }
 
-void StrogatzGraph::normalize_culture_distribution() {
+void Graph::normalize_culture_distribution() {
     measure_culture_histogram();
 
     culture_distribution.clear();
@@ -248,57 +148,63 @@ void StrogatzGraph::normalize_culture_distribution() {
     }
 }
 
-void StrogatzGraph::save_culture_histogram(std::ofstream& outfile) const {
+void Graph::save_culture_histogram(std::ofstream& outfile) const {
     for (int count : culture_histogram) {
         outfile << count << " ";
     }
     outfile << "\n";
 }
 
-void StrogatzGraph::save_culture_distribution(std::ofstream& outfile) const {
+void Graph::save_culture_distribution(std::ofstream& outfile) const {
     for (double p : culture_distribution) {
         outfile << p << " ";
     }
     outfile << "\n";
 }
 
-int StrogatzGraph::count_distinct_cultures() const {
+int Graph::count_distinct_cultures() const {
     std::unordered_set<std::vector<int>, VecHash> uniq;
     uniq.reserve(num_nodes);
     for (auto& c : node_features) {
         uniq.insert(c);
     }
-    return (int)uniq.size();
+    return static_cast<int>(uniq.size());
 }
 
-int StrogatzGraph::largest_culture_size() const {
+int Graph::largest_culture_size() const {
     std::unordered_map<std::vector<int>, int, VecHash> freq;
     freq.reserve(num_nodes);
 
-    for (auto& c : node_features) freq[c]++;
+    for (auto& c : node_features) {
+        freq[c]++;
+    }
 
     int max_size = 0;
     for (auto& kv : freq) {
-        if (kv.second > max_size) max_size = kv.second;
+        if (kv.second > max_size) {
+            max_size = kv.second;
+        }
     }
     return max_size;
 }
 
-double StrogatzGraph::average_similarity() const {
+double Graph::average_similarity() const {
     long long count_edges = 0;
     double total_sim = 0.0;
 
     for (int i = 0; i < num_nodes; ++i) {
         for (int j : adj_list[i]) {
-            if (j <= i) continue; // avoid double counting
+            if (j <= i) continue;
             count_edges++;
 
             int shared = 0;
-            for (int f = 0; f < num_features; ++f)
-                if (node_features[i][f] == node_features[j][f])
+            for (int f = 0; f < num_features; ++f) {
+                if (node_features[i][f] == node_features[j][f]) {
                     shared++;
+                }
+            }
 
-            total_sim += (double)shared / num_features;
+            total_sim += static_cast<double>(shared) / num_features;
         }
     }
 
@@ -306,13 +212,15 @@ double StrogatzGraph::average_similarity() const {
     return total_sim / count_edges;
 }
 
-double StrogatzGraph::entropy_cultures() const {
+double Graph::entropy_cultures() const {
     std::unordered_map<std::vector<int>, int, VecHash> freq;
     freq.reserve(num_nodes);
 
-    for (auto& c : node_features) freq[c]++;
+    for (auto& c : node_features) {
+        freq[c]++;
+    }
 
-    double total = (double)num_nodes;
+    double total = static_cast<double>(num_nodes);
     double H = 0.0;
 
     for (auto& kv : freq) {
@@ -323,32 +231,140 @@ double StrogatzGraph::entropy_cultures() const {
     return H;
 }
 
-double StrogatzGraph::fragmentation_index() const {
+double Graph::fragmentation_index() const {
     int L = largest_culture_size();
-    return 1.0 - (double)L / (double)num_nodes;
+    return 1.0 - static_cast<double>(L) / static_cast<double>(num_nodes);
 }
 
-double StrogatzGraph::edge_homophily() const {
-    return average_similarity(); // same definition here
+double Graph::edge_homophily() const {
+    return average_similarity();
 }
 
-double StrogatzGraph::global_similarity() const {
+double Graph::global_similarity() const {
     long long pairs = 0;
     double total_sim = 0.0;
 
     for (int i = 0; i < num_nodes; ++i) {
-        for (int j = i+1; j < num_nodes; ++j) {
+        for (int j = i + 1; j < num_nodes; ++j) {
             pairs++;
 
             int shared = 0;
-            for (int f = 0; f < num_features; ++f)
-                if (node_features[i][f] == node_features[j][f])
+            for (int f = 0; f < num_features; ++f) {
+                if (node_features[i][f] == node_features[j][f]) {
                     shared++;
+                }
+            }
 
-            total_sim += (double)shared / num_features;
+            total_sim += static_cast<double>(shared) / num_features;
         }
     }
 
     if (pairs == 0) return 0.0;
     return total_sim / pairs;
+}
+
+StrogatzGraph::StrogatzGraph(int n, int k, double p, int f_num, int f_dim)
+    : Graph(n, f_num, f_dim), neighbors_per_node(k), rewiring_prob(p) {
+    generate_graph();
+    generate_node_features();
+}
+
+void StrogatzGraph::generate_graph() {
+    if (neighbors_per_node % 2 != 0) {
+        throw std::runtime_error("neighbors_per_node must be even.");
+    }
+
+    adj_list.assign(num_nodes, {});
+
+    int K = neighbors_per_node;
+    std::vector<std::vector<int>> directed(num_nodes);
+
+    for (int i = 0; i < num_nodes; ++i) {
+        for (int j = 1; j <= K / 2; ++j) {
+            int nbr = (i + j) % num_nodes;
+            directed[i].push_back(nbr);
+        }
+    }
+
+    for (int i = 0; i < num_nodes; ++i) {
+        auto& row = directed[i];
+        for (int idx = 0; idx < static_cast<int>(row.size()); ++idx) {
+            if (rand_real_0_1() < rewiring_prob) {
+                int new_n;
+
+                while (true) {
+                    new_n = rand_int(0, num_nodes - 1);
+                    if (new_n == i) continue;
+
+                    bool exists = false;
+                    for (int x : row) {
+                        if (x == new_n) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) break;
+                }
+
+                row[idx] = new_n;
+            }
+        }
+    }
+
+    for (int i = 0; i < num_nodes; ++i) {
+        for (int n : directed[i]) {
+            adj_list[i].push_back(n);
+            adj_list[n].push_back(i);
+        }
+    }
+
+    for (int i = 0; i < num_nodes; ++i) {
+        auto& v = adj_list[i];
+        std::sort(v.begin(), v.end());
+        v.erase(std::unique(v.begin(), v.end()), v.end());
+    }
+}
+
+LatticeGraph::LatticeGraph(int n, int radius, int f_num, int f_dim)
+    : Graph(n, f_num, f_dim), lattice_radius(radius) {
+    if (lattice_radius <= 0) {
+        throw std::runtime_error("lattice_radius must be positive.");
+    }
+    generate_graph();
+    generate_node_features();
+}
+
+int LatticeGraph::lattice_side() const {
+    int L = static_cast<int>(std::sqrt(num_nodes));
+    if (L * L != num_nodes) {
+        throw std::runtime_error("num_nodes must be a perfect square for a 2D lattice.");
+    }
+    return L;
+}
+
+void LatticeGraph::generate_graph() {
+    int L = lattice_side();
+    adj_list.assign(num_nodes, {});
+
+    for (int x = 0; x < L; ++x) {
+        for (int y = 0; y < L; ++y) {
+            int node = x * L + y;
+
+            for (int dx = -lattice_radius; dx <= lattice_radius; ++dx) {
+                for (int dy = -lattice_radius; dy <= lattice_radius; ++dy) {
+                    if (dx == 0 && dy == 0) continue;
+                    if (std::abs(dx) + std::abs(dy) > lattice_radius) continue;
+
+                    int nx = (x + dx + L) % L;
+                    int ny = (y + dy + L) % L;
+                    int neighbor = nx * L + ny;
+                    adj_list[node].push_back(neighbor);
+                }
+            }
+
+            auto& row = adj_list[node];
+            std::sort(row.begin(), row.end());
+            row.erase(std::unique(row.begin(), row.end()), row.end());
+        }
+    }
 }
