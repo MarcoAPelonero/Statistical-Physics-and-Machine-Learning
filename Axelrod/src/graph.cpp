@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ostream>
 #include <random>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -366,5 +368,36 @@ void LatticeGraph::generate_graph() {
             std::sort(row.begin(), row.end());
             row.erase(std::unique(row.begin(), row.end()), row.end());
         }
+    }
+}
+
+std::pair<int, int> LatticeGraph::node_position(int node) const {
+    if (node < 0 || node >= num_nodes) {
+        throw std::runtime_error("node_position: node index out of range.");
+    }
+    int L = lattice_side();
+    int x = node / L;
+    int y = node % L;
+    return {x, y};
+}
+
+void LatticeGraph::save_positions(std::ostream& out) const {
+    out << "# node_index x y\n";
+    for (int node = 0; node < num_nodes; ++node) {
+        auto pos = node_position(node);
+        out << node << " " << pos.first << " " << pos.second << "\n";
+    }
+}
+
+void LatticeGraph::save_snapshot(std::ostream& out, int step) const {
+    out << "# snapshot_step " << step << "\n";
+    for (int node = 0; node < num_nodes; ++node) {
+        auto pos = node_position(node);
+        out << step << " " << node << " " << pos.first << " " << pos.second;
+        const auto& feats = node_features[node];
+        for (int f : feats) {
+            out << " " << f;
+        }
+        out << "\n";
     }
 }

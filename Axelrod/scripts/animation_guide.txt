@@ -1,0 +1,22 @@
+Animation + plotting quick guide
+===============================
+
+Generate lattice snapshot data (q = 5, 20, 50)
+- Build/run snapshot generator (static-linked on Windows is automatic):  
+  make clean && make test FILE=lattice_snapshots
+- Outputs: data/lattice_snapshots/lattice_q{5,20,50}_snapshots.txt, lattice_q{5,20,50}_fragmentation.txt, lattice_positions.txt
+
+Animate lattice evolution + fragmentation (2 rows x 3 columns)
+- Requires python with matplotlib, pandas, pillow (for GIF) and/or ffmpeg (for mp4)
+- Run and display only:  
+  python scripts/animate_lattice_snapshots.py --input-dir data/lattice_snapshots
+- Save mp4 (uses ffmpeg):  
+  python scripts/animate_lattice_snapshots.py --input-dir data/lattice_snapshots --output figures/lattice_snapshots.mp4 --no-show
+- Save GIF (uses pillow):  
+  python scripts/animate_lattice_snapshots.py --input-dir data/lattice_snapshots --output figures/lattice_snapshots.gif --no-show
+
+Convergence sweeps (q = 3, fragmentation < 0.05 threshold)
+- Generate sweep data:  
+  make clean && make test FILE=lattice_convergence
+- Plot convergence curves (3 subplots for num_nodes / num_features / lattice_radius):  
+  python scripts/plot_convergence_times.py --data-dir data/lattice_convergence --output figures/convergence_times.png

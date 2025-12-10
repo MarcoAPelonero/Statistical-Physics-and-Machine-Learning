@@ -2,7 +2,9 @@
 
 #include "utils.hpp"
 #include <fstream>
+#include <iosfwd>
 #include <string>
+#include <utility>
 #include <vector>
 
 struct couple {
@@ -67,6 +69,9 @@ class StrogatzGraph : public Graph {
 class LatticeGraph : public Graph {
   public:
     LatticeGraph(int n, int radius, int f_num, int f_dim);
+    std::pair<int, int> node_position(int node) const;
+    void save_positions(std::ostream& out) const;
+    void save_snapshot(std::ostream& out, int step) const;
 
   private:
     int lattice_radius;

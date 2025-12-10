@@ -12,6 +12,10 @@ EXE_EXT :=
 # Add .exe on Windows hosts (MSYS/MinGW still define Windows_NT)
 ifeq ($(OS),Windows_NT)
 EXE_EXT := .exe
+# Link statically on Windows to avoid missing runtime DLLs when running from
+# shells that lack mingw on PATH.
+WIN_STATIC_FLAGS := -static -static-libstdc++ -static-libgcc
+LDFLAGS += $(WIN_STATIC_FLAGS)
 endif
 
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
@@ -56,11 +60,7 @@ test:
 else
 test: $(BIN_DIR)/test_$(FILE)$(EXE_EXT)
 	@echo ">> Running test for $(FILE)..."
-ifeq ($(OS),Windows_NT)
-	@"$(subst /,\\,$(BIN_DIR)/test_$(FILE)$(EXE_EXT))"
-else
-	@./$(BIN_DIR)/test_$(FILE)$(EXE_EXT)
-endif
+	@$(if $(filter Windows_NT,$(OS)),,./)$(BIN_DIR)/test_$(FILE)$(EXE_EXT)
 endif
 
 compile: $(MAIN_EXE)
