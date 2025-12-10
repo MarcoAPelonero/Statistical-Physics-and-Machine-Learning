@@ -136,12 +136,12 @@ def plot_observables(ax, df, param, title, observables, obs_colors=None, fill_al
         obs_column_map = {
             'largest_cluster_size': 'avg_largest_fraction',
             'homophily': 'avg_homophily',
-            'global_similarity': 'avg_global_similarity'
+            'fragmentation': 'avg_fragmentation'
         }
         obs_std_map = {
             'largest_cluster_size': 'sd_largest_fraction',
             'homophily': 'sd_homophily',
-            'global_similarity': 'sd_global_similarity'
+            'fragmentation': 'sd_fragmentation'
         }
 
         for obs in observables:
@@ -192,7 +192,7 @@ def read_sweep_dataframe(filepath):
     return parse_sweep_string(text)
 
 if __name__ == "__main__":
-    data_dir = "data_sweeps_backup"
+    data_dir = "data_sweeps"
     out_dir = "figures"
     os.makedirs(out_dir, exist_ok=True)
 
@@ -213,9 +213,9 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
     # Example plotting code (customize as needed)
-    # Plot 3 errorbars for each subplot and for each of the observables: largest_cluster_size, homophily, global_similarity
+    # Plot 3 errorbars for each subplot and for each of the observables: largest_cluster_size, homophily, fragmentation
     # Each subplot has 3 curves (errorbars) for each observable. The graphs are for the invidial sweeps
-    observables = ['largest_cluster_size', 'homophily', 'global_similarity']  
+    observables = ['largest_cluster_size', 'homophily', 'fragmentation']  
     sweep_data = [feature_dim_data, num_nodes_data, lattice_radius_data, num_features_data]
     sweep_params = ['feature_dim', 'num_nodes', 'lattice_radius', 'num_features']
 
