@@ -9,13 +9,6 @@ std::vector<double> compute_distribution(StrogatzGraph g) {
     return g.get_culture_distribution();
 }
 
-void print_vector(const std::vector<double>& vec) {
-    for (double val : vec) {
-        std::cout << val << " ";
-    }
-    std::cout << "\n";
-}
-
 void sweep_different_parameters(int num_nodes, int neighbors_per_node,
                                 double rewiring_prob, int num_features,
                                 int feature_dim, int num_interactions, bool verbose=false) {
