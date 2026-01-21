@@ -38,7 +38,7 @@ int main() {
     // Save only the final state
     std::ofstream file("lattice_ising.txt");
     file << "# Step " << total_steps << "\n";
-    lattice_graph_ising.save_edges_to_file(file);
+    lattice_graph_ising.save_nodes_to_file(file);
     file.close();
 
     std::cout << "Simulation completed for Ising. Final state saved to lattice_ising.txt\n";
@@ -50,7 +50,7 @@ int main() {
     total_steps = 40000;
 
     for (int step = 0; step < total_steps; ++step) {
-        lattice_graph_voter.update_graph_voter();
+        lattice_graph_voter.update_graph_voter(lattice_graph_voter.get_num_nodes());
         if ((step + 1) % 100 == 0) {
             std::cout << "Done step " << (step + 1) << " out of " << total_steps << "\n";
         }
@@ -59,7 +59,7 @@ int main() {
     // Save only the final state
     std::ofstream voter_file("lattice_voter.txt");
     voter_file << "# Step " << total_steps << "\n";
-    lattice_graph_voter.save_edges_to_file(voter_file);
+    lattice_graph_voter.save_nodes_to_file(voter_file);
     voter_file.close();
 
     std::cout << "Simulation completed for Voter. Final state saved to lattice_voter.txt\n";
