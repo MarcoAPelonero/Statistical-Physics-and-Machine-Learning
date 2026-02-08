@@ -56,6 +56,10 @@ run-pipeline: main
 run-innovate: main
 	@$(BIN_DIR)/main innovate
 
+# Run the null model filtering pipeline
+run-nullmodel: main
+	@$(BIN_DIR)/main nullmodel
+
 # Run a single test file (usage: make run FILE=test_name)
 # Example: make run FILE=test_name (runs bin/test_test_name)
 run: $(BIN_DIR)/test_$(FILE)

@@ -89,7 +89,7 @@ inline int runTrainingPipeline() {
         return 1;
     }
 
-    const int    globalMinCount   = 2;
+    const int    globalMinCount   = 5;
     const double globalTrimLowPct = 0.05;
     const double globalTrimHiPct  = 0.05;
 
@@ -122,16 +122,16 @@ inline int runTrainingPipeline() {
     }
 
     TrainingConfig config;
-    config.embeddingDim    = 100;
-    config.negSamples      = 5;
-    config.epochs          = 10;          // More epochs for better convergence
+    config.embeddingDim    = 64;
+    config.negSamples      = 10;
+    config.epochs          = 50;          // More epochs for better convergence
     config.batchSize       = 4096;
-    config.learningRate    = 0.25f;       // Tuned LR for small dataset
-    config.minLearningRate = 0.005f;      // Higher floor to prevent stalling
+    config.learningRate    = 0.05f;       // Tuned LR for small dataset
+    config.minLearningRate = 0.01f;      // Higher floor to prevent stalling
     config.minCount        = globalMinCount;
     config.trimLowPct      = 0.0f;
     config.trimHighPct     = 0.0f;
-    config.numThreads      = 4;
+    config.numThreads      = 6;
     config.seed            = 42;
     config.verbose         = true;
 
