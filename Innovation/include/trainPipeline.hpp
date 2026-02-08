@@ -36,10 +36,10 @@
 struct TrainingConfig {
     int      embeddingDim    = 100;      // dimensionality
     int      negSamples      = 5;        // negatives per positive pair
-    int      epochs          = 5;        // full passes over the data
+    int      epochs          = 10;       // full passes over the data
     int      batchSize       = 4096;     // pairs per mini-batch
-    float    learningRate    = 0.025f;   // initial α
-    float    minLearningRate = 0.0001f;  // floor for α decay
+    float    learningRate    = 0.25f;    // initial α (tuned for small datasets)
+    float    minLearningRate = 0.005f;   // floor for α decay
     int      minCount        = 1;        // discard tokens rarer than this
     float    trimLowPct      = 0.05f;    // drop bottom frequency percentile
     float    trimHighPct     = 0.05f;    // drop top frequency percentile
@@ -186,10 +186,13 @@ public:
                 auto now = std::chrono::high_resolution_clock::now();
                 double elapsed =
                     std::chrono::duration<double>(now - t0).count();
+                // Show the effective learning rate (with floor applied)
+                float displayLr = config.learningRate
+                                * (1.0f - (float)workDone / (float)totalWork);
+                displayLr = std::max(displayLr, config.minLearningRate);
                 std::cout << "  [epoch " << (epoch + 1) << "/" << config.epochs
                           << "]  avg_loss=" << (epochLoss / totalPairs)
-                          << "  lr=" << (config.learningRate
-                                        * (1.0f - (float)workDone / (float)totalWork))
+                          << "  lr=" << displayLr
                           << "  " << elapsed << "s\n";
             }
         }

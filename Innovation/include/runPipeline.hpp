@@ -124,10 +124,10 @@ inline int runTrainingPipeline() {
     TrainingConfig config;
     config.embeddingDim    = 100;
     config.negSamples      = 5;
-    config.epochs          = 5;
+    config.epochs          = 10;          // More epochs for better convergence
     config.batchSize       = 4096;
-    config.learningRate    = 0.025f;
-    config.minLearningRate = 0.0001f;
+    config.learningRate    = 0.25f;       // Tuned LR for small dataset
+    config.minLearningRate = 0.005f;      // Higher floor to prevent stalling
     config.minCount        = globalMinCount;
     config.trimLowPct      = 0.0f;
     config.trimHighPct     = 0.0f;

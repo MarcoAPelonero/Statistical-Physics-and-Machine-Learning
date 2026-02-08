@@ -176,13 +176,15 @@ public:
         embDim    = embDim_;
 
         W_in .resize((size_t)vocabSize * embDim);
-        W_out.assign((size_t)vocabSize * embDim, 0.0f);
+        W_out.resize((size_t)vocabSize * embDim);
 
-        // word2vec-style uniform init: U(-0.5/d, 0.5/d)
+        // Xavier-style uniform init: U(-sqrt(6/(fan_in+fan_out)), sqrt(6/(fan_in+fan_out)))
+        // Simplified to U(-1/sqrt(d), 1/sqrt(d)) for embeddings
         std::mt19937 rng(seed);
-        float scale = 0.5f / embDim;
+        float scale = 1.0f / std::sqrt((float)embDim);
         std::uniform_real_distribution<float> dist(-scale, scale);
-        for (auto& w : W_in) w = dist(rng);
+        for (auto& w : W_in)  w = dist(rng);
+        for (auto& w : W_out) w = dist(rng);
 
         sampler.build(vocab);
     }
