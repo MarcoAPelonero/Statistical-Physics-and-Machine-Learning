@@ -1,7 +1,7 @@
 #pragma once
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  innovation.hpp  –  Detect & score never-seen MeSH code pairs
+// ===========================================================================
+//  innovation.hpp  -  Detect & score never-seen MeSH code pairs
 //
 //  Flow:
 //    1. Load global vocab & per-year embeddings produced by the training pipeline
@@ -11,10 +11,10 @@
 //    5. For each subsequent year, record which candidates first appear (discovery)
 //    6. For every candidate, compute the cosine-similarity (dot product of
 //       normalised embeddings) across all available years
-//    7. Save  innovations_all.bin        – full binary dump
-//            innovations_discovered.csv  – discovered subset (for plotting)
-//            innovations_stats.txt       – summary
-// ═══════════════════════════════════════════════════════════════════════════
+//    7. Save  innovations_all.bin        - full binary dump
+//            innovations_discovered.csv  - discovered subset (for plotting)
+//            innovations_stats.txt       - summary
+// ===========================================================================
 
 #include <vector>
 #include <unordered_set>
@@ -41,7 +41,7 @@ inline int parseDCode(const std::string& s) {
     return (i < s.size()) ? std::atoi(s.c_str() + i) : -1;
 }
 
-// Canonical pair key – both values are vocab INDICES (< 20 000)
+// Canonical pair key - both values are vocab INDICES (< 20 000)
 inline int64_t encodePair(int a, int b) {
     if (a > b) { int t = a; a = b; b = t; }
     return (int64_t)a * 20000LL + b;
@@ -79,7 +79,7 @@ inline std::vector<int> detectPredictionYears(const std::string& dir) {
     return yrs;
 }
 
-// Load a per-year embedding file into a flat V×D float vector
+// Load a per-year embedding file into a flat VxD float vector
 // Uses fopen (MinGW ifstream has reliability issues in this binary).
 inline std::vector<float> loadEmbeddingFile(const std::string& path,
                                             int V, int D) {
@@ -138,7 +138,7 @@ inline int runInnovationPipeline() {
     std::cout << "  [1/7] Loading global vocabulary...\n";
     Vocabulary vocab = loadFormattedVocab(outputDir + "/global_vocab.txt");
     if (vocab.empty()) {
-        std::cerr << "  Error: vocab empty – run 'train' first.\n"; return 1; }
+        std::cerr << "  Error: vocab empty - run 'train' first.\n"; return 1; }
     const int V = vocab.size();
     std::cout << "         " << V << " tokens\n";
 
@@ -146,7 +146,7 @@ inline int runInnovationPipeline() {
     std::cout << "  [2/7] Scanning embedding files...\n";
     auto predYears = detectPredictionYears(outputDir);
     if (predYears.empty()) {
-        std::cerr << "  Error: no embeddings – run 'train' first.\n"; return 1; }
+        std::cerr << "  Error: no embeddings - run 'train' first.\n"; return 1; }
     std::sort(predYears.begin(), predYears.end());
     const int numYears     = (int)predYears.size();
     const int firstPred    = predYears.front();
@@ -154,9 +154,9 @@ inline int runInnovationPipeline() {
     const int trainStart   = firstPred - windowSize;
     const int trainEnd     = firstPred - 1;
     std::cout << "         " << numYears << " years: "
-              << firstPred << " – " << lastPred << "\n"
+              << firstPred << " - " << lastPred << "\n"
               << "         Training window: " << trainStart
-              << " – " << trainEnd << "\n";
+              << " - " << trainEnd << "\n";
 
     // ── 3. Load all embeddings ─────────────────────────────────────────
     std::cout << "  [3/7] Loading embeddings...\n";
@@ -183,7 +183,7 @@ inline int runInnovationPipeline() {
     if (lines.empty()) {
         std::cerr << "  Error: cannot read " << dataFile << "\n"; return 1; }
 
-    // year → list of articles (each article = vector of vocab indices)
+    // year -> list of articles (each article = vector of vocab indices)
     std::map<int, std::vector<std::vector<int>>> articlesByYear;
     int nArticles = 0;
     for (const auto& line : lines) {
@@ -199,7 +199,7 @@ inline int runInnovationPipeline() {
 
     // ── 5. Build co-occurrence set & active codes (training window) ────
     std::cout << "  [5/7] Building co-occurrence set ("
-              << trainStart << "–" << trainEnd << ")...\n";
+              << trainStart << "-" << trainEnd << ")...\n";
     auto t5 = Clock::now();
 
     std::unordered_set<int64_t> coOccurred;
@@ -235,7 +235,7 @@ inline int runInnovationPipeline() {
 
     // ── 6. Build discovery map (prediction years) ──────────────────────
     std::cout << "  [6/7] Tracking discoveries "
-              << firstPred << "–" << lastPred << "...\n";
+              << firstPred << "-" << lastPred << "...\n";
     auto t6 = Clock::now();
 
     std::unordered_map<int64_t, int> discoveryMap;

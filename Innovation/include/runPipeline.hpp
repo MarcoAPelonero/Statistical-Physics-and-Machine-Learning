@@ -1,8 +1,8 @@
 #pragma once
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  runPipeline.hpp  –  Sliding-window Word2Vec training (refactored from main)
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
+//  runPipeline.hpp  -  Sliding-window Word2Vec training (refactored from main)
+// ===========================================================================
 
 #include <iostream>
 #include <vector>
@@ -29,9 +29,9 @@ inline int runTrainingPipeline() {
     system(("mkdir -p " + outputDir).c_str());
 #endif
 
-    std::cout << "═══════════════════════════════════════════\n"
+    std::cout << "===========================================\n"
               << "  Loading dataset: " << dataFile << "\n"
-              << "═══════════════════════════════════════════\n\n";
+              << "===========================================\n\n";
 
     auto lines = readFile(dataFile);
     if (lines.empty()) {
@@ -103,9 +103,9 @@ inline int runTrainingPipeline() {
         return 1;
     }
 
-    std::cout << "═══════════════════════════════════════════\n"
+    std::cout << "===========================================\n"
               << "  Global Vocabulary\n"
-              << "═══════════════════════════════════════════\n";
+              << "===========================================\n";
     globalVocab.printStats();
     {
         std::string vocabFile = outputDir + "/global_vocab.txt";
@@ -124,14 +124,14 @@ inline int runTrainingPipeline() {
     TrainingConfig config;
     config.embeddingDim    = 64;
     config.negSamples      = 10;
-    config.epochs          = 50;          // More epochs for better convergence
+    config.epochs          = 80;          // More epochs for better convergence
     config.batchSize       = 4096;
     config.learningRate    = 0.05f;       // Tuned LR for small dataset
     config.minLearningRate = 0.01f;      // Higher floor to prevent stalling
     config.minCount        = globalMinCount;
     config.trimLowPct      = 0.0f;
     config.trimHighPct     = 0.0f;
-    config.numThreads      = 6;
+    config.numThreads      = 8;
     config.seed            = 42;
     config.verbose         = true;
 
@@ -149,11 +149,11 @@ inline int runTrainingPipeline() {
         predictionYears.push_back(predYear);
 
         std::cout
-            << "\n═══════════════════════════════════════════\n"
+            << "\n===========================================\n"
             << "  Window " << (w + 1) << "/" << numWindows
             << "  |  Train [" << startYear << " - " << endYear
             << "]  ->  Predict " << predYear << "\n"
-            << "═══════════════════════════════════════════\n";
+            << "===========================================\n";
 
         std::vector<std::vector<int>> windowEntries;
         for (int y = startYear; y <= endYear; ++y) {
@@ -205,9 +205,9 @@ inline int runTrainingPipeline() {
     }
 
     std::string masterFile = outputDir + "/master_embeddings.txt";
-    std::cout << "\n═══════════════════════════════════════════\n"
+    std::cout << "\n===========================================\n"
               << "  Writing master file: " << masterFile << "\n"
-              << "═══════════════════════════════════════════\n";
+              << "===========================================\n";
 
     FILE* fp = std::fopen(masterFile.c_str(), "w");
     if (!fp) {
@@ -229,9 +229,9 @@ inline int runTrainingPipeline() {
     }
     std::fclose(fp);
 
-    std::cout << "\n═══════════════════════════════════════════\n"
+    std::cout << "\n===========================================\n"
               << "  PIPELINE COMPLETE\n"
-              << "═══════════════════════════════════════════\n"
+              << "===========================================\n"
               << "  Tokens             : " << V << "\n"
               << "  Embedding dim      : " << D << "\n"
               << "  Prediction years   : " << numWindows

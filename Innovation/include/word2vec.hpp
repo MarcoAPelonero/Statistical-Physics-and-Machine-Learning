@@ -1,12 +1,12 @@
 #pragma once
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  word2vec.hpp  –  Skip-Gram with Negative Sampling (SGNS)
-//
-//  • SIMD-accelerated dot-product & axpy  (AVX → SSE → scalar fallback)
-//  • Negative-sampling via pre-built unigram^0.75 table
-//  • Hogwild!-safe trainPairWithBuffer (thread-local grad buffer, no locks)
-//  • Utilities: save/load weights, text export, cosine similarity,
+//  word2vec.hpp  -  Skip-Gram with Negative Sampling (SGNS)
+
+//  - SIMD-accelerated dot-product & axpy  (AVX -> SSE -> scalar fallback)
+//  - Negative-sampling via pre-built unigram^0.75 table
+//  - Hogwild!-safe trainPairWithBuffer (thread-local grad buffer, no locks)
+//  - Utilities: save/load weights, text export, cosine similarity,
 //    nearest neighbours, analogy, L2 normalisation.
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -48,7 +48,7 @@ inline float dotProduct(const float* a, const float* b, int n) {
         __m256 vb = _mm256_loadu_ps(b + i);
         vsum = _mm256_add_ps(vsum, _mm256_mul_ps(va, vb));
     }
-    // 256 → 128
+    // 256 -> 128
     __m128 hi  = _mm256_extractf128_ps(vsum, 1);
     __m128 lo  = _mm256_castps256_ps128(vsum);
     __m128 r4  = _mm_add_ps(lo, hi);
@@ -161,8 +161,8 @@ public:
     int vocabSize = 0;
     int embDim    = 0;
 
-    std::vector<float> W_in;       // input  embeddings  [vocabSize × embDim]
-    std::vector<float> W_out;      // output embeddings  [vocabSize × embDim]
+    std::vector<float> W_in;       // input  embeddings  [vocabSize x embDim]
+    std::vector<float> W_out;      // output embeddings  [vocabSize x embDim]
     NegativeSampler    sampler;
 
     Word2VecModel() = default;
@@ -197,7 +197,7 @@ public:
     const float* outputVec(int idx) const { return W_out.data() + (size_t)idx * embDim; }
 
     // ═════════════════════════════════════════════════════════════════════════
-    //  Training  (SGNS on a single centre–context pair)
+    //  Training  (SGNS on a single centre-context pair)
     // ═════════════════════════════════════════════════════════════════════════
 
     // Efficient version: caller supplies a pre-allocated gradient buffer
@@ -246,7 +246,7 @@ public:
         return loss;
     }
 
-    // Convenience wrapper (allocates grad buffer — fine for one-off calls)
+    // Convenience wrapper (allocates grad buffer - fine for one-off calls)
     float trainPair(int center, int context,
                     int negSamples, float lr, std::mt19937& rng)
     {
@@ -295,7 +295,7 @@ public:
         return result;
     }
 
-    // Analogy: "a is to b as c is to ?"  →  vec(a) − vec(b) + vec(c)
+    // Analogy: "a is to b as c is to ?"  ->  vec(a) - vec(b) + vec(c)
     std::vector<std::pair<int, float>> analogy(int a, int b, int c,
                                                int k = 5) const
     {
@@ -369,7 +369,7 @@ public:
     }
 
     // word2vec text format: "vocabSize embDim\ntoken e1 e2 ... ed\n..."
-    // Uses fprintf — std::ofstream crashes on large float writes in MinGW.
+    // Uses fprintf - std::ofstream crashes on large float writes in MinGW.
     bool saveEmbeddingsText(const std::string& filename,
                             const Vocabulary& vocab) const
     {

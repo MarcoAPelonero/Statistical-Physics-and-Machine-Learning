@@ -1,7 +1,7 @@
 #pragma once
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  trainPipeline.hpp  –  Batched, OpenMP-parallel training pipeline
+// ===========================================================================
+//  trainPipeline.hpp  -  Batched, OpenMP-parallel training pipeline
 //
 //  Generic: input entries have entry[0] = metadata (skipped), entry[1..n] =
 //  tokens.  Change the data, swap the parser, this pipeline still works.
@@ -14,7 +14,7 @@
 //
 //  Use `TrainingPipeline::run()` for the one-call path, or call the
 //  individual public helpers for a custom flow.
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
 
 #include <vector>
 #include <algorithm>
@@ -60,16 +60,16 @@ struct TrainingResult {
 class TrainingPipeline {
 public:
 
-    // ╔═══════════════════════════════════════════════════════════════════════╗
-    // ║  One-call convenience: vocab → pairs → train → return               ║
-    // ╚═══════════════════════════════════════════════════════════════════════╝
+    // ------------------------------------------------------------------------
+    //  One-call convenience: vocab -> pairs -> train -> return
+    // ------------------------------------------------------------------------
 
     static TrainingResult run(
         const std::vector<std::vector<int>>& entries,
         const TrainingConfig& config = TrainingConfig())
     {
         if (config.verbose)
-            std::cout << "\n══════ Training Pipeline ══════\n\n";
+              std::cout << "\n====== Training Pipeline ======\n\n";
 
         // 1. Vocabulary
         Vocabulary vocab;

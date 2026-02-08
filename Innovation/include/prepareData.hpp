@@ -1,11 +1,11 @@
 #pragma once
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  prepareData.hpp  –  Vocabulary construction & training-pair generation
+// ===========================================================================
+//  prepareData.hpp  -  Vocabulary construction & training-pair generation
 //
 //  Generic: expects entries where entry[0] = metadata (e.g. year, skipped)
 //           and entry[1..n] = context tokens (ints).
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
 
 #include <vector>
 #include <unordered_map>
@@ -15,12 +15,12 @@
 #include <fstream>
 #include <string>
 
-// ── Vocabulary ──────────────────────────────────────────────────────────────
+// -- Vocabulary -------------------------------------------------------------
 
 struct Vocabulary {
-    std::unordered_map<int, int> token2idx;   // original token → contiguous index
-    std::vector<int>             idx2token;   // contiguous index → original token
-    std::vector<int>             frequencies; // contiguous index → count
+    std::unordered_map<int, int> token2idx;   // original token -> contiguous index
+    std::vector<int>             idx2token;   // contiguous index -> original token
+    std::vector<int>             frequencies; // contiguous index -> count
     int totalTokens = 0;
 
     // Build from dataset entries. Tokens rarer than minCount are discarded.
@@ -99,7 +99,7 @@ struct Vocabulary {
         return (it != token2idx.end()) ? it->second : -1;
     }
 
-    // ── I/O ─────────────────────────────────────────────────────────────────
+    // -- I/O -----------------------------------------------------------------
 
     bool save(const std::string& filename) const {
         std::ofstream out(filename);
@@ -129,7 +129,7 @@ struct Vocabulary {
         return in.good();
     }
 
-    // ── Diagnostics ─────────────────────────────────────────────────────────
+    // -- Diagnostics ---------------------------------------------------------
 
     void printStats() const {
         if (empty()) { std::cout << "  (empty vocabulary)\n"; return; }
@@ -180,7 +180,7 @@ inline std::vector<TrainingPair> generateTrainingPairs(
             int idx = vocab.getIndex(entry[i]);
             if (idx >= 0) indices.push_back(idx);
         }
-        // Full context — all ordered pairs
+        // Full context - all ordered pairs
         for (size_t i = 0; i < indices.size(); ++i)
             for (size_t j = 0; j < indices.size(); ++j)
                 if (i != j) pairs.push_back({indices[i], indices[j]});

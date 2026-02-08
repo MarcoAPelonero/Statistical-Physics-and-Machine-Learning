@@ -1,7 +1,7 @@
 #pragma once
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  nullModel.hpp  –  Cosine-similarity null model for innovation filtering
+// ===========================================================================
+//  nullModel.hpp  -  Cosine-similarity null model for innovation filtering
 //
 //  For each prediction year, estimate the null distribution of cosine
 //  similarities among non-co-occurring code pairs by random sampling.
@@ -12,12 +12,12 @@
 //    1. Load embeddings for all prediction years
 //    2. Build the baseline co-occurrence set from the initial training window
 //    3. Sample N random non-co-occurring pairs from active codes
-//    4. For each year, compute cosine similarity of the sampled pairs → μ_Y, σ_Y
+//    4. For each year, compute cosine similarity of the sampled pairs -> mu_Y, sigma_Y
 //    5. For each innovation couple, compute z = (cos_sim - μ_Y) / σ_Y
 //    6. Filter couples with z > threshold at discovery year
 //
 //  Output: output/null_model_filtered.csv
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
 
 #include <vector>
 #include <unordered_set>
@@ -146,7 +146,7 @@ inline int runNullModelPipeline() {
     std::cout << "  [1/7] Loading global vocabulary...\n";
     Vocabulary vocab = loadFormattedVocab(outputDir + "/global_vocab.txt");
     if (vocab.empty()) {
-        std::cerr << "  Error: vocab empty – run 'train' first.\n"; return 1;
+        std::cerr << "  Error: vocab empty - run 'train' first.\n"; return 1;
     }
     const int V = vocab.size();
     std::cout << "         " << V << " tokens\n";
@@ -155,7 +155,7 @@ inline int runNullModelPipeline() {
     std::cout << "  [2/7] Detecting prediction years...\n";
     auto predYears = detectPredictionYears(outputDir);
     if (predYears.empty()) {
-        std::cerr << "  Error: no embeddings found – run 'train' first.\n";
+        std::cerr << "  Error: no embeddings found - run 'train' first.\n";
         return 1;
     }
     std::sort(predYears.begin(), predYears.end());
@@ -449,11 +449,11 @@ inline int runNullModelPipeline() {
             std::fprintf(outFp, ",%.6g", v);
         }
 
-        // Per-year null model μ (GLOBAL – same for all couples)
+        // Per-year null model mu (GLOBAL - same for all couples)
         for (int yi = 0; yi < numYears; ++yi)
             std::fprintf(outFp, ",%.6g", nullDist[yi].mu);
 
-        // Per-year null model σ (GLOBAL – same for all couples)
+        // Per-year null model sigma (GLOBAL - same for all couples)
         for (int yi = 0; yi < numYears; ++yi)
             std::fprintf(outFp, ",%.6g", nullDist[yi].sigma);
 

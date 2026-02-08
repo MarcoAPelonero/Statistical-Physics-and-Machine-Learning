@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-// Format an internal int token back to a full MeSH UI  (e.g. 3267 → "D003267")
+// Format an internal int token back to a full MeSH UI  (e.g. 3267 -> "D003267")
 inline std::string formatMeshUI(int token) {
     char buf[16];
     std::snprintf(buf, sizeof(buf), "D%06d", token);
