@@ -44,6 +44,29 @@ Graph::Graph(double length) {
     }
 }
 
+Graph::Graph(double length, double p) : num_nodes(static_cast<int>(length * length)) {
+    // Start by making a fully connected graph
+    adjacency_list.resize(num_nodes);
+    for (int i = 0; i < num_nodes; ++i) {
+        for (int j = 0; j < num_nodes; ++j) {
+            if (i != j) {
+                adjacency_list[static_cast<std::size_t>(i)].emplace_back(static_cast<std::size_t>(j), 1.0); // Fully connected with weight 1.0
+            }
+        }
+    }
+    // Make it bidirectional
+    make_graph_undirected();
+    nodes_state.resize(num_nodes);
+    for (int i = 0; i < num_nodes; ++i) {
+        double u = static_cast<double>(rand()) / RAND_MAX;
+        if (u < p) {
+            nodes_state[i] = 1; // +1 state
+        } else {
+            nodes_state[i] = -1; // -1 state
+        }
+    }
+}
+
 Graph::Graph(int num_nodes, double p) : num_nodes(num_nodes) {
     adjacency_list.resize(num_nodes);
     for (int i = 0; i < num_nodes; ++i) {
@@ -110,11 +133,29 @@ void Graph::make_graph_undirected() {
     }
 }
 
+void Graph::make_graph_fully_connected() {
+    adjacency_list.clear();
+    adjacency_list.resize(num_nodes);
+    for (int i = 0; i < num_nodes; ++i) {
+        for (int j = 0; j < num_nodes; ++j) {
+            if (i != j) {
+                adjacency_list[static_cast<std::size_t>(i)].emplace_back(static_cast<std::size_t>(j), 1.0); // Fully connected with weight 1.0
+            }
+        }
+    }
+}
+
 void Graph::save_edges_to_file(std::ofstream& file) const {
     for (std::size_t i = 0; i < adjacency_list.size(); ++i) {
         for (const auto& edge : adjacency_list[i]) {
             file << i << " " << edge.first << " " << edge.second << " " << nodes_state[i] << "\n";
         }
+    }
+}
+
+void Graph::save_nodes_to_file(std::ofstream& file) const {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(num_nodes); ++i) {
+        file << "NODE " << i << " " << nodes_state[i] << "\n";
     }
 }
 
@@ -199,23 +240,20 @@ void Graph::update_node_state_ising(std::size_t node, double temperature) {
     }
 }
 
-void Graph::update_graph_voter() {
-    // Synchronous update: all nodes update based on current state
-    // Create a buffer copy to ensure we read from the OLD state while writing to NEW state
-    std::vector<int> new_state = nodes_state; // Copy current state as buffer
-    
-    for (std::size_t i = 0; i < adjacency_list.size(); ++i) {
-        // Select randomly one of the neighbors and copy its state from CURRENT configuration
-        if (!adjacency_list[i].empty()) {
-            std::size_t random_index = static_cast<std::size_t>(rand() % adjacency_list[i].size());
-            std::size_t neighbor = adjacency_list[i][random_index].first;
-            // CRITICAL: Always read from nodes_state (old), write to new_state (buffer)
-            new_state[i] = nodes_state[neighbor];
-        }
+void Graph::update_graph_voter(int updates_per_call) {
+    if (num_nodes <= 0 || updates_per_call <= 0) {
+        return;
     }
-    
-    // Apply all updates simultaneously by swapping the entire state vector
-    nodes_state = new_state;
+
+    for (int step = 0; step < updates_per_call; ++step) {
+        std::size_t node = static_cast<std::size_t>(rand() % num_nodes);
+        if (adjacency_list[node].empty()) {
+            continue; // No neighbors, nothing to copy
+        }
+        std::size_t neighbor_index = static_cast<std::size_t>(rand() % adjacency_list[node].size());
+        std::size_t neighbor = adjacency_list[node][neighbor_index].first;
+        nodes_state[node] = nodes_state[neighbor];
+    }
 }
 
 void Graph::update_graph_ising(double temperature) {
@@ -281,4 +319,25 @@ void Graph::droplet(double radius, bool state) {
             }
         }
     }
+}
+
+double Graph::density() const {
+    int count_plus_one = 0;
+    for (int state : nodes_state) {
+        if (state == 1) {
+            ++count_plus_one;
+        }
+    }
+    return static_cast<double>(count_plus_one) / num_nodes;
+}
+
+bool Graph::consensus_reached() const {
+    if (nodes_state.empty()) return true;
+    int first_state = nodes_state[0];
+    for (int state : nodes_state) {
+        if (state != first_state) {
+            return false;
+        }
+    }
+    return true;
 }

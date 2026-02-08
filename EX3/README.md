@@ -1,0 +1,3 @@
+# Excercise 03: The randomised perceptron learning rule
+
+This part of the repo is dedicated to the altered version of the perceptron exercise. What we want to  achieve is tyo show the alignmenet between tghe trained one and the percpetron as we keep increasing the size of the training ste and. In this xacse we repeat the experiment for a series of big lenght number which increases the dimensionality of the prboroblem, taking highier and highier hypersurfaces inevitably makes the problem a lot more difficult and so when try to compare results betwen these problems with larger and larger datasets what you obtain is hopefully a asdcale which tells you how  much data you need to ssolve a certain kind of task 

@@ -84,6 +84,7 @@ SweepResult runAccuracySweep(int numTrials, int maxEpochs,
                              const std::vector<int>& datasetSizes,
                              const std::string& label) {
     constexpr int N = Bits * 2;
+    // const double noiseSigma = std::sqrt(50.0);
     const double noiseSigma = 0.0;
 
     std::vector<RunningStats> stats(datasetSizes.size());
@@ -857,7 +858,7 @@ void extraPointTwo() {
     std::cout << "\n=== Extra Point 2: Accuracy sweeps across bit widths ===\n";
     constexpr int numTrials = 200;
     constexpr int maxEpochs = 10000;
-    const std::array<int, 4> bitWidths = {10, 20, 40, 60};
+    const std::array<int, 1> bitWidths = {10};
 
     ensureDirectory(kExtraOutputDir);
     const std::string outputPath = std::string(kExtraOutputDir) + "/extra_point_two_new.csv";

@@ -83,10 +83,11 @@ def _finalize_axes(ax, title, legend_kwargs=None):
     ax.figure.tight_layout()
 
 
-def _plot_standard_curves(curves: AggregatedCurves, title: str):
+def _plot_standard_curves(curves: AggregatedCurves, title: str, plot_train_curves: bool = True):
     _apply_theme()
     fig, ax = plt.subplots(figsize=(9, 6), dpi=100)
-    _plot_with_band(ax, curves.alpha, curves.train_mean, curves.train_se, 'Training Error Rate', marker='o')
+    if plot_train_curves:
+        _plot_with_band(ax, curves.alpha, curves.train_mean, curves.train_se, 'Training Error Rate', marker='o')
     _plot_with_band(ax, curves.alpha, curves.test_mean, curves.test_se, 'Test Error Rate', marker='s')
     _finalize_axes(ax, title)
     plt.show()
@@ -224,10 +225,21 @@ def exPointFivePlotter():
 
 
 def exPointSixPlotter():
-    pseudo_inverse = _load_curves('extraPointOne_results.csv')
+    pseudo_inverse = _load_curves('exPointTwo_results.csv')
+    pseudo_inverse_ridge = _load_curves('extraPointOne_results.csv')
     adaline = _load_curves('exPointFive_results.csv')
     _apply_theme()
     fig, ax = plt.subplots(figsize=(12, 7), dpi=100)
+    _plot_with_band(
+        ax,
+        pseudo_inverse_ridge.alpha,
+        pseudo_inverse_ridge.test_mean,
+        pseudo_inverse_ridge.test_se,
+        'Test Error (Pseudoinverse + Ridge)',
+        marker='o',
+        color='C2',
+        fill_alpha=0.15,
+    )
     _plot_with_band(
         ax,
         pseudo_inverse.alpha,
@@ -246,6 +258,17 @@ def exPointSixPlotter():
         'Test Error (Adaline)',
         marker='^',
         color='C1',
+        fill_alpha=0.15,
+    )
+    _plot_with_band(
+        ax,
+        pseudo_inverse_ridge.alpha,
+        pseudo_inverse_ridge.train_mean,
+        pseudo_inverse_ridge.train_se,
+        'Training Error (Pseudoinverse + Ridge)',
+        marker='o',
+        linestyle='--',
+        color='C2',
         fill_alpha=0.15,
     )
     _plot_with_band(
@@ -276,7 +299,7 @@ def exPointSixPlotter():
 
 def exPointSevenPlotter():
     curves = _load_curves('exPointSeven_results.csv')
-    _plot_standard_curves(curves, 'Training and Test Error Rates vs Alpha')
+    _plot_standard_curves(curves, 'Training and Test Error Rates vs Alpha', plot_train_curves=False)
 
 def exPointEightPlotter():
     """
@@ -315,6 +338,70 @@ def exPointEightPlotter():
     _finalize_axes(ax, 'Empirical vs Bayes Theoretical Generalisation Error')
     plt.show()
 
+def exPointNinePlotter():
+    # Plot the curves from  the theoretical model, seven, five, two, and extra1
+    curves_seven = _load_curves('exPointSeven_results.csv')
+    curves_five = _load_curves('exPointFive_results.csv')
+    curves_two = _load_curves('exPointTwo_results.csv')
+    curves_extra1 = _load_curves('extraPointOne_results.csv')
+
+    alpha_vals = curves_seven.alpha
+    bayes_eps = np.array([float(bayes_generalisation_error(a)) for a in alpha_vals])
+
+    _apply_theme()
+    fig, ax = plt.subplots(figsize=(12, 7), dpi=100)
+    _plot_with_band(
+        ax,
+        curves_seven.alpha,
+        curves_seven.test_mean,
+        curves_seven.test_se,
+        'Test Error (Bayes)',
+        marker='o',
+        color='C0',
+        fill_alpha=0.15,
+    )
+    _plot_with_band(
+        ax,
+        curves_five.alpha,
+        curves_five.test_mean,
+        curves_five.test_se,
+        'Test Error (Adaline)',
+        marker='s',
+        color='C1',
+        fill_alpha=0.15,
+    )
+    _plot_with_band(
+        ax,
+        curves_two.alpha,
+        curves_two.test_mean,
+        curves_two.test_se,
+        'Test Error (Pseudoinverse)',
+        marker='^',
+        color='C2',
+        fill_alpha=0.15,
+    )
+    _plot_with_band(
+        ax,
+        curves_extra1.alpha,
+        curves_extra1.test_mean,
+        curves_extra1.test_se,
+        'Test Error (Ridge Regression)',
+        marker='D',
+        color='C3',
+        fill_alpha=0.15,
+    )
+    ax.plot(
+        alpha_vals,
+        bayes_eps,
+        label='Bayes Theoretical Error',
+        linestyle='-',
+        linewidth=2.5,
+        marker='o',
+        markersize=6,
+        color='C4',
+    )
+    _finalize_axes(ax, 'Comparison of Test Errors Across Experiments', legend_kwargs={'fontsize': 10})
+    plt.show()
 
 
 def _build_dispatch_table():
@@ -329,6 +416,8 @@ def _build_dispatch_table():
         'seven': exPointSevenPlotter,
         '8': exPointEightPlotter,
         'eight': exPointEightPlotter,
+        '9': exPointNinePlotter,
+        'nine': exPointNinePlotter,
         'extra1': extraPointOnePlotter,
         'extra': extraPointOnePlotter,
         '': exPointEightPlotter,
