@@ -13,7 +13,7 @@ Outputs JSONL by default (one JSON object per line). Optional JSON array.
 
 Example:
   python datafetch.py -n 10000 --start-year 2000 --end-year 2019 \
-    --email marcus.scienza@gmail.com --out dataset.jsonl --english-only --chunk 200 --min-mesh 8
+    --email name@provider.com --out dataset.jsonl --english-only --chunk 200 --min-mesh 8
 
 Notes:
 - This is NOT “true randomness”. It is deterministic-ish within each month because we take from the head.

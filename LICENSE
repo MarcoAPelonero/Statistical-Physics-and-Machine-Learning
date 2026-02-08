@@ -1,25 +1,125 @@
+MARCO ANTONIO PELONERO PROPRIETARY LICENSE
+Research / Educational / Evaluation Use Only (Non-Commercial)
+Version 1.0 — 2026-02-08
+
 Copyright (c) 2025 Marco Antonio Pelonero. All rights reserved.
 
-This software is proprietary and confidential. 
-Unauthorized copying, modification, distribution, use, or sale of this software, 
-in whole or in part, is strictly prohibited without prior written permission 
-and a commercial license from the author.
+IMPORTANT: BY ACCESSING, DOWNLOADING, COPYING, INSTALLING, OR USING THE SOFTWARE,
+YOU AGREE TO BE BOUND BY THIS LICENSE. IF YOU DO NOT AGREE, DO NOT USE THE SOFTWARE.
 
-Commercial Use:
-    To use this software in any commercial capacity, 
-    you must obtain a paid license from Marco Antonio Pelonero.
-    Contact: marco.pelonero.work@gmail.com
+1) DEFINITIONS
+“Author” means Marco Antonio Pelonero.
 
-Non-Commercial Use:
-    You may view and use this code for personal, educational, or 
-    research purposes only, provided you do not distribute or 
-    deploy it in any form.
+“Software” means the source code, object code, build scripts, headers, libraries,
+examples, tests, documentation, and any other materials provided by the Author,
+including any updates or patches.
 
-DISCLAIMER:
-THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING 
-FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-IN THE SOFTWARE.
+“Use” means to install, execute, compile, copy, modify, or otherwise run the Software.
+
+“Commercial Use” means any Use that is for, or is intended for, commercial advantage
+or monetary compensation, including (without limitation): (a) selling or licensing the
+Software; (b) using it to provide a product or service (including SaaS / hosted services);
+(c) internal business purposes at a for-profit entity; (d) consulting, contract work, or
+paid research that benefits a third party; (e) using it in a production environment.
+
+“Distribution” means providing, transferring, publishing, or making available the Software
+(or any portion of it) to any third party, including (without limitation) via repositories,
+package registries, app stores, containers, binaries, installers, or by sharing source code
+snippets beyond what is strictly necessary for academic citation.
+
+“Deploy” means to run or make the Software available for use by others, including
+on servers, clusters, cloud environments, managed notebooks, CI systems, or any environment
+accessible by persons other than You.
+
+“You” means the individual or legal entity exercising permissions granted by this License.
+
+“Research Output” means any public or shared material that results from Use of the Software,
+including (without limitation) papers, preprints, theses, posters, slides, talks, demos,
+blog posts, reports, benchmarks, datasets, or released source code.
+
+2) LICENSE GRANT (NON-COMMERCIAL RESEARCH / EDUCATION / EVALUATION)
+Subject to full compliance with this License, the Author grants You a limited, revocable,
+non-exclusive, non-transferable, non-sublicensable license to Use the Software solely for:
+(a) personal learning; (b) academic teaching; (c) non-commercial research; (d) evaluation/testing.
+
+This license does NOT grant any right for Commercial Use, Distribution, or Deployment.
+
+3) RESTRICTIONS
+Except as expressly permitted in Section 2, You MUST NOT:
+(a) use the Software for any Commercial Use;
+(b) Distribute the Software, in whole or in part, in source or binary form;
+(c) Deploy the Software in any shared, hosted, or production environment, or make it available
+    to any third party (including via APIs, SaaS, remote access, shared accounts, or “as a service”);
+(d) sublicense, rent, lease, sell, assign, or transfer the Software or this License;
+(e) remove, alter, or obscure any copyright, attribution, or license notices in the Software;
+(f) Distribute modifications, derivative works, or ports of the Software;
+(g) reverse engineer, decompile, or disassemble any provided binaries, except to the extent
+    expressly permitted by applicable law that cannot be waived.
+
+You may modify the Software ONLY for Your own internal non-commercial purposes, and such
+modifications remain subject to this License. Any Distribution or Deployment of modifications
+requires a separate written commercial license from the Author.
+
+4) MANDATORY CITATION (CONDITION OF RESEARCH USE)
+If You Use the Software in any non-commercial research context and produce any Research Output,
+You MUST provide an appropriate citation to the Author and the Software in that Research Output.
+
+Minimum requirement:
+- In academic publications/preprints/theses: a formal bibliography entry; and
+- In presentations/posters/blog posts/demos: a visible attribution on a slide/page; and
+- When reporting benchmark results: a citation adjacent to the results.
+
+Suggested citation (edit as appropriate):
+Pelonero, Marco Antonio (2025). [SOFTWARE NAME], proprietary software. Used under license. Contact: marco.pelonero.work@gmail.com
+
+If the Software has a repository URL, DOI, or version tag, You must include it in the citation.
+
+Failure to comply with this Section is a material breach and automatically terminates Your license
+under Section 9.
+
+5) CONFIDENTIALITY (ONLY IF SOFTWARE IS PROVIDED NON-PUBLICLY)
+If the Software is provided to You in a non-public manner (e.g., private repository, direct archive,
+or under an NDA), You must treat it as confidential information and use reasonable measures to prevent
+unauthorized access or disclosure.
+
+6) OWNERSHIP; NO RIGHTS BY IMPLICATION
+The Software is licensed, not sold. The Author retains all right, title, and interest in and to the
+Software, including all intellectual property rights. No rights are granted by implication, estoppel,
+or otherwise, except as expressly stated in this License. No patent rights are granted under this License.
+No trademark rights are granted under this License.
+
+7) ENFORCEMENT; INJUNCTIVE RELIEF
+You acknowledge that unauthorized Commercial Use, Distribution, or Deployment may cause irreparable harm
+to the Author. The Author may seek injunctive or equitable relief (in addition to any other remedies)
+to prevent or stop any breach of this License.
+
+8) DISCLAIMER
+THE SOFTWARE IS PROVIDED “AS IS” AND “AS AVAILABLE”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+NON-INFRINGEMENT, AND TITLE. YOU ASSUME ALL RISK ARISING FROM USE OF THE SOFTWARE.
+
+9) TERMINATION
+This License is effective until terminated. It terminates automatically and immediately if You breach
+any term of this License. Upon termination, You must stop all Use of the Software and permanently delete
+all copies in Your possession or control, including any modified versions.
+
+10) LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF,
+OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE, INCLUDING WITHOUT
+LIMITATION ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR LOSS OF
+PROFITS, DATA, OR BUSINESS INTERRUPTION.
+
+11) GOVERNING LAW; VENUE
+This License shall be governed by the laws of the Republic of Italy, excluding conflict-of-law rules.
+Any dispute arising out of or relating to this License or the Software shall be subject to the exclusive
+jurisdiction of the courts of Rome, Italy (Foro esclusivo di Roma).
+
+12) SEVERABILITY; ENTIRE AGREEMENT; WAIVER
+If any provision of this License is held unenforceable, the remaining provisions will remain in effect.
+This License is the entire agreement regarding the Software and supersedes any prior or contemporaneous
+communications. A waiver of any breach is not a waiver of any other breach.
+
+13) COMMERCIAL LICENSING
+For any Commercial Use, Distribution, or Deployment, You must obtain a separate paid license from the Author.
+Contact: marco.pelonero.work@gmail.com
