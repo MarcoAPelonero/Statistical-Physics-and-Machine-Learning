@@ -5,6 +5,14 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstdio>
+
+// Format an internal int token back to a full MeSH UI  (e.g. 3267 → "D003267")
+inline std::string formatMeshUI(int token) {
+    char buf[16];
+    std::snprintf(buf, sizeof(buf), "D%06d", token);
+    return std::string(buf);
+}
 
 inline std::vector<std::string> readFile(const std::string& filename) {
     std::vector<std::string> lines;

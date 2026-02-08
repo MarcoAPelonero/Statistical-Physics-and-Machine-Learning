@@ -401,4 +401,43 @@ public:
     }
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+//  Post-processing: remove the dominant shared direction
+//
+//  SGNS on small/skewed corpora leaves a strong "mean direction" in the
+//  embedding space.  Every vector is partially aligned with it, which
+//  inflates pairwise cosine similarity.  Subtracting the mean and
+//  re-normalising removes this artifact.
+//  (cf. Mu & Viswanath 2018, "All-but-the-Top")
+// ═════════════════════════════════════════════════════════════════════════════
+
+inline void meanCenterAndNormalize(float* emb, int V, int D) {
+    // 1. Compute mean embedding
+    std::vector<float> mean(D, 0.0f);
+    for (int i = 0; i < V; ++i) {
+        const float* row = emb + (size_t)i * D;
+        for (int d = 0; d < D; ++d) mean[d] += row[d];
+    }
+    float invV = 1.0f / V;
+    for (int d = 0; d < D; ++d) mean[d] *= invV;
+
+    // 2. Subtract mean from every vector
+    for (int i = 0; i < V; ++i) {
+        float* row = emb + (size_t)i * D;
+        for (int d = 0; d < D; ++d) row[d] -= mean[d];
+    }
+
+    // 3. Re-normalise to unit length
+    for (int i = 0; i < V; ++i) {
+        float* row = emb + (size_t)i * D;
+        float norm = 0.0f;
+        for (int d = 0; d < D; ++d) norm += row[d] * row[d];
+        norm = std::sqrt(norm);
+        if (norm > 1e-12f) {
+            float inv = 1.0f / norm;
+            for (int d = 0; d < D; ++d) row[d] *= inv;
+        }
+    }
+}
+
 } // namespace w2v

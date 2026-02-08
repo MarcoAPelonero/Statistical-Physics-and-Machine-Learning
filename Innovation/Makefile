@@ -48,9 +48,13 @@ run-tests: tests
 		$$test || exit 1; \
 	done
 
-# Run the full pipeline
+# Run the training pipeline
 run-pipeline: main
-	@$(BIN_DIR)/main
+	@$(BIN_DIR)/main train
+
+# Run the innovation detection pipeline
+run-innovate: main
+	@$(BIN_DIR)/main innovate
 
 # Run a single test file (usage: make run FILE=test_name)
 # Example: make run FILE=test_name (runs bin/test_test_name)
