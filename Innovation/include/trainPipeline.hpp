@@ -103,9 +103,9 @@ public:
         return { std::move(model), std::move(vocab) };
     }
 
-    // ╔═══════════════════════════════════════════════════════════════════════╗
-    // ║  Public helper: train an already-initialised model on given pairs    ║
-    // ╚═══════════════════════════════════════════════════════════════════════╝
+    // ==================================================================================
+    //  Public helper: train an already-initialised model on given pairs   
+    // ==================================================================================
 
     static void train(
         w2v::Word2VecModel& model,

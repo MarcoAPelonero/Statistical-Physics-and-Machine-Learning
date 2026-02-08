@@ -117,9 +117,9 @@ struct YearNullDist {
     float sigma = 0.0f;
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ======================================================================================
 //  Main entry
-// ═══════════════════════════════════════════════════════════════════════════
+// ======================================================================================
 
 inline int runNullModelPipeline() {
     using Clock = std::chrono::high_resolution_clock;
@@ -135,9 +135,9 @@ inline int runNullModelPipeline() {
     NullModelConfig config;
 
     std::cout << "\n"
-        "═══════════════════════════════════════════\n"
+        "================================================================================\n"
         "  Null Model Pipeline  (cosine-sim null)\n"
-        "═══════════════════════════════════════════\n"
+        "================================================================================\n"
         "  Config:\n"
         "    Null samples          : " << config.nullSamples << "\n"
         "    Z threshold           : " << config.zThreshold << "\n\n";
@@ -464,9 +464,9 @@ inline int runNullModelPipeline() {
     double totalTime = std::chrono::duration<double>(Clock::now() - t0).count();
 
     std::cout << "\n"
-        "═══════════════════════════════════════════\n"
+        "================================================================================\n"
         "  NULL MODEL PIPELINE COMPLETE\n"
-        "═══════════════════════════════════════════\n"
+        "================================================================================\n"
         "  Total innovations in CSV  : " << innovations.size()   << "\n"
         "  Skipped (year mismatch)   : " << skipped              << "\n"
         "  Accepted (z > threshold)  : " << accepted             << "\n"
@@ -475,7 +475,7 @@ inline int runNullModelPipeline() {
         "  Output                    : " << outFile              << "\n"
         "  Z-score log               : " << zScoreFile           << "\n"
         "  Total time                : " << totalTime            << "s\n"
-        "═══════════════════════════════════════════\n";
+        "================================================================================\n";
 
     return 0;
 }

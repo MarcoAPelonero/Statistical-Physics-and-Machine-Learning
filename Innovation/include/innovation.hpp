@@ -118,21 +118,21 @@ inline void showProgress(const char* label, int64_t cur, int64_t tot, double sec
     std::fflush(stdout);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
 //  Main entry
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
 
 inline int runInnovationPipeline() {
     using Clock = std::chrono::high_resolution_clock;
-
+    
     const std::string dataFile  = "Dataset.jsonl";
     const std::string outputDir = "output";
     const int windowSize = 5;
 
     std::cout << "\n"
-        "═══════════════════════════════════════════\n"
+        "===========================================\n"
         "  Innovation Detection Pipeline\n"
-        "═══════════════════════════════════════════\n\n";
+        "===========================================\n\n";
 
     // ── 1. Load global vocabulary ──────────────────────────────────────
     std::cout << "  [1/7] Loading global vocabulary...\n";
@@ -374,9 +374,9 @@ inline int runInnovationPipeline() {
 
     // ── Summary ────────────────────────────────────────────────────────
     std::cout
-        << "\n═══════════════════════════════════════════\n"
+        << "\n===========================================\n"
         << "  INNOVATION PIPELINE COMPLETE\n"
-        << "═══════════════════════════════════════════\n"
+        << "===========================================\n"
         << "  Active codes       : " << N          << "\n"
         << "  Innovation pairs   : " << numInnov   << "\n"
         << "  Discovered pairs   : " << numDisc    << "\n"
@@ -384,7 +384,7 @@ inline int runInnovationPipeline() {
         << "  Binary output      : " << binFile    << "\n"
         << "  Discovered CSV     : " << csvFile    << "\n"
         << "  Stats              : " << statsFile  << "\n"
-        << "═══════════════════════════════════════════\n";
+        << "===========================================\n";
 
     return 0;
 }

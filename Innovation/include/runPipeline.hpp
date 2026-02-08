@@ -242,7 +242,7 @@ inline int runTrainingPipeline() {
               << "/embeddings_<YEAR>.txt\n"
               << "  Global vocabulary  : " << outputDir
               << "/global_vocab.txt\n"
-              << "═══════════════════════════════════════════\n";
+              << "===========================================\n";
 
     return 0;
 }
