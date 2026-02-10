@@ -46,8 +46,8 @@
 
 struct NullModelConfig {
     int      nullSamples    = 50000;   // random non-co-occurring pairs to sample
-    double   zThreshold     = 2.0;     // z-score filter threshold
-    int      numThreads     = 4;       // OpenMP threads
+    double   zThreshold     = 3.0;     // z-score filter threshold
+    int      numThreads     = 6;       // OpenMP threads
     unsigned seed           = 42;      // master RNG seed
     bool     verbose        = true;
 };
