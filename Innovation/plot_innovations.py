@@ -28,9 +28,52 @@ import seaborn as sns
 FILTERED_CSV = "output/null_model_filtered.csv"
 DATASET_JSONL = "Dataset.jsonl"
 
-# Use seaborn styling
-sns.set_style("whitegrid")
-sns.set_palette("husl")
+# Parse command line arguments
+DARKMODE = "--darkmode" in sys.argv
+
+# Configure styling based on mode
+if DARKMODE:
+    sns.set_style("darkgrid")
+    sns.set_palette("husl")
+    plt.rcParams['figure.facecolor'] = 'black'
+    plt.rcParams['axes.facecolor'] = 'black'
+    plt.rcParams['axes.edgecolor'] = 'white'
+    plt.rcParams['text.color'] = 'white'
+    plt.rcParams['axes.labelcolor'] = 'white'
+    plt.rcParams['xtick.color'] = 'white'
+    plt.rcParams['ytick.color'] = 'white'
+    plt.rcParams['legend.facecolor'] = 'black'
+    plt.rcParams['legend.edgecolor'] = 'white'
+    plt.rcParams['grid.color'] = 'gray'
+    FACECOLOR = 'black'
+    TITLE_COLOR = 'white'
+    LABEL_COLORS = {
+        'mu_band': 'lightgray',
+        'mu_line': 'lightgray',
+        'cosine_line': 'white',
+        'discovery_line': 'yellow',
+    }
+else:
+    sns.set_style("whitegrid")
+    sns.set_palette("husl")
+    plt.rcParams['figure.facecolor'] = 'white'
+    plt.rcParams['axes.facecolor'] = 'white'
+    plt.rcParams['axes.edgecolor'] = 'black'
+    plt.rcParams['text.color'] = 'black'
+    plt.rcParams['axes.labelcolor'] = 'black'
+    plt.rcParams['xtick.color'] = 'black'
+    plt.rcParams['ytick.color'] = 'black'
+    plt.rcParams['legend.facecolor'] = 'white'
+    plt.rcParams['legend.edgecolor'] = 'black'
+    plt.rcParams['grid.color'] = 'lightgray'
+    FACECOLOR = 'white'
+    TITLE_COLOR = '#2c3e50'
+    LABEL_COLORS = {
+        'mu_band': 'mediumpurple',
+        'mu_line': 'indigo',
+        'cosine_line': 'dodgerblue',
+        'discovery_line': 'crimson',
+    }
 
 # ─── Build MeSH code → human name lookup from Dataset.jsonl ─────────────────
 
@@ -114,36 +157,40 @@ def main():
         mu_lo = [m - s for m, s in zip(mus, sigs)]
         mu_hi = [m + s for m, s in zip(mus, sigs)]
 
-        # Purple band (μ ± σ)
-        ax.fill_between(years, mu_lo, mu_hi,
-                        color="mediumpurple", alpha=0.35, label="Null μ ± σ")
+        # Null model band
+        if DARKMODE:
+            ax.fill_between(years, mu_lo, mu_hi,
+                            color=LABEL_COLORS['mu_band'], alpha=0.25, label="Null μ ± σ")
+        else:
+            ax.fill_between(years, mu_lo, mu_hi,
+                            color=LABEL_COLORS['mu_band'], alpha=0.35, label="Null μ ± σ")
 
-        # Null model average (darker purple)
-        ax.plot(years, mus, "-", color="indigo", linewidth=1.5,
-                alpha=0.8, label="Null μ")
+        # Null model average
+        ax.plot(years, mus, "-", color=LABEL_COLORS['mu_line'], linewidth=1.5,
+                alpha=0.7 if DARKMODE else 0.8, label="Null μ")
 
-        # Cosine similarity (bright blue)
-        ax.plot(years, dots, "o-", color="dodgerblue",
-                markersize=5, linewidth=2, label="Cosine sim", zorder=3)
+        # Cosine similarity
+        ax.plot(years, dots, "o-", color=LABEL_COLORS['cosine_line'],
+                markersize=5, linewidth=2.5 if DARKMODE else 2, label="Cosine sim", zorder=3)
 
-        # Discovery year (crimson)
-        ax.axvline(x=disc, color="crimson", linestyle="--", linewidth=2.5,
+        # Discovery year
+        ax.axvline(x=disc, color=LABEL_COLORS['discovery_line'], linestyle="--", linewidth=2.5,
                    alpha=0.8, label=f"Discovery {disc}", zorder=2)
 
         # Title with human names (single line for codes)
         labelA = code_label(row["codeA"])
         labelB = code_label(row["codeB"])
         ax.set_title(f"{labelA} ↔ {labelB} (z = {z:.1f})",
-                     fontsize=9, fontweight="bold", color="#2c3e50")
+                     fontsize=9, fontweight="bold", color=TITLE_COLOR)
 
         ax.legend(fontsize=7, loc="best", framealpha=0.95)
-        ax.set_xlabel("Year", fontsize=9, fontweight="bold")
-        ax.set_ylabel("Cosine Similarity", fontsize=9, fontweight="bold")
+        ax.set_xlabel("Year", fontsize=9, fontweight="bold", color=TITLE_COLOR if DARKMODE else 'black')
+        ax.set_ylabel("Cosine Similarity", fontsize=9, fontweight="bold", color=TITLE_COLOR if DARKMODE else 'black')
         ax.set_ylim(-0.2, 1.0)
         ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
-        ax.grid(True, alpha=0.3, linestyle="--")
+        ax.grid(True, alpha=0.3, linestyle="--", color='gray' if DARKMODE else 'lightgray')
         ax.set_xticks(years[::2])
-        ax.tick_params(labelsize=8)
+        ax.tick_params(labelsize=8, colors='white' if DARKMODE else 'black')
 
     # ── Sample and prepare data ─────────────────────────────────────────
     # Ensure we have enough for 4 figures (9 + 3 + 3 + 3 = 18)
@@ -165,14 +212,14 @@ def main():
         fig1, axes1 = plt.subplots(3, 3, figsize=(18, 12))
         fig1.suptitle(
             "Innovation Prediction — Post-2010 Discoveries (3×3 Grid)",
-            fontsize=16, fontweight="bold", y=0.995,
+            fontsize=16, fontweight="bold", y=0.995, color=TITLE_COLOR
         )
         for idx, row in enumerate(group_3x3):
             ax = axes1[idx // 3][idx % 3]
             plot_couple(ax, row, dot_cols, mu_cols, sigma_cols, years, mesh_names)
         plt.tight_layout(rect=[0, 0, 1, 0.97])
         out1 = "output/innovation_plots_1_grid3x3.png"
-        plt.savefig(out1, dpi=150, bbox_inches="tight", facecolor="white")
+        plt.savefig(out1, dpi=150, bbox_inches="tight", facecolor=FACECOLOR)
         print(f"Saved {out1}")
         plt.close(fig1)
 
@@ -181,14 +228,14 @@ def main():
         fig2, axes2 = plt.subplots(1, 3, figsize=(18, 5))
         fig2.suptitle(
             "Innovation Prediction — Post-2010 Discoveries (Selection 1)",
-            fontsize=14, fontweight="bold", y=1.00,
+            fontsize=14, fontweight="bold", y=1.00, color=TITLE_COLOR
         )
         for idx, row in enumerate(group_3x1_1):
             plot_couple(axes2[idx], row, dot_cols, mu_cols, sigma_cols, years,
                        mesh_names)
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         out2 = "output/innovation_plots_2_selection1.png"
-        plt.savefig(out2, dpi=150, bbox_inches="tight", facecolor="white")
+        plt.savefig(out2, dpi=150, bbox_inches="tight", facecolor=FACECOLOR)
         print(f"Saved {out2}")
         plt.close(fig2)
 
@@ -197,14 +244,14 @@ def main():
         fig3, axes3 = plt.subplots(1, 3, figsize=(18, 5))
         fig3.suptitle(
             "Innovation Prediction — Post-2010 Discoveries (Selection 2)",
-            fontsize=14, fontweight="bold", y=1.00,
+            fontsize=14, fontweight="bold", y=1.00, color=TITLE_COLOR
         )
         for idx, row in enumerate(group_3x1_2):
             plot_couple(axes3[idx], row, dot_cols, mu_cols, sigma_cols, years,
                        mesh_names)
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         out3 = "output/innovation_plots_3_selection2.png"
-        plt.savefig(out3, dpi=150, bbox_inches="tight", facecolor="white")
+        plt.savefig(out3, dpi=150, bbox_inches="tight", facecolor=FACECOLOR)
         print(f"Saved {out3}")
         plt.close(fig3)
 
@@ -213,14 +260,14 @@ def main():
         fig4, axes4 = plt.subplots(1, 3, figsize=(18, 5))
         fig4.suptitle(
             "Innovation Prediction — Post-2010 Discoveries (Selection 3)",
-            fontsize=14, fontweight="bold", y=1.00,
+            fontsize=14, fontweight="bold", y=1.00, color=TITLE_COLOR
         )
         for idx, row in enumerate(group_3x1_3):
             plot_couple(axes4[idx], row, dot_cols, mu_cols, sigma_cols, years,
                        mesh_names)
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         out4 = "output/innovation_plots_4_selection3.png"
-        plt.savefig(out4, dpi=150, bbox_inches="tight", facecolor="white")
+        plt.savefig(out4, dpi=150, bbox_inches="tight", facecolor=FACECOLOR)
         print(f"Saved {out4}")
         plt.close(fig4)
 
